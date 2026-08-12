@@ -3,8 +3,11 @@
 This document serves as the absolute engineering source of truth mapping out communication contracts across our Flask API architecture endpoints.
 
 ## 🌍 Base URL
-`http://127.0.0.1:5000`
+Development:
+http://127.0.0.1:5000
 
+Production:
+https://backend-name.onrender.com
 ---
 
 ## 👥 Customer-Facing Public Endpoints (No Authentication Required)
@@ -83,8 +86,8 @@ This document serves as the absolute engineering source of truth mapping out com
 * **Body:**
 ```json
 {
-  "email": "abubakarfarah123@gmail.com",
-  "password": "ScrubPoint2026!"
+  "email": "<ADMIN_EMAIL>",
+  "password": "<ADMIN_PASSWORD>"
 }
 ```
 * **Success Response:** `200 OK`

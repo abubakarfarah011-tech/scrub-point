@@ -1,4 +1,3 @@
-# src/views/responses.py
 class ApiResponse:
     @staticmethod
     def success(data=None, message="Operation completed successfully", status_code=200):

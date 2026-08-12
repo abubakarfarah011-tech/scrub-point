@@ -1,5 +1,3 @@
-# src/models/domain.py
-
 class ProductDomain:
     def __init__(self, id=None, name=None, description=None, price=0.0, category=None, is_featured=False, is_out_of_stock=False, image_url=None, created_at=None):
         self.id = id
@@ -24,8 +22,6 @@ class ProductDomain:
             "image_url": self.image_url,
             "created_at": self.created_at
         }
-
-
 class VariantDomain:
     def __init__(self, id=None, product_id=None, size=None, color=None, stock_quantity=0):
         self.id = id
@@ -42,8 +38,6 @@ class VariantDomain:
             "color": self.color,
             "stock_quantity": self.stock_quantity
         }
-
-
 class OrderDomain:
     def __init__(self, id=None, product_name=None, variant_details=None, total_price=0.0, created_at=None):
         self.id = id
@@ -61,7 +55,6 @@ class OrderDomain:
             "created_at": self.created_at
         }
 
-
 class AdminDomain:
     def __init__(self, id=None, email=None, password_hash=None, role=None, created_at=None):
         self.id = id
@@ -77,7 +70,6 @@ class AdminDomain:
             "role": self.role,
             "created_at": self.created_at
         }
-
 
 class ReviewDomain:
     def __init__(self, id=None, reviewer_name=None, title_or_role=None, rating=5, comment=None, is_approved=True, created_at=None):

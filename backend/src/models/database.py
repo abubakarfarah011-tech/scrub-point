@@ -1,16 +1,30 @@
-# src/models/database.py
 import os
-from dotenv import load_dotenv
+import atexit
+import httpx
 from supabase import create_client, Client
+from dotenv import load_dotenv
 
-# Load environment configurations
 load_dotenv()
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("CRITICAL ERROR: SUPABASE_URL and SUPABASE_KEY are unconfigured in your .env file.")
+if not supabase_url or not supabase_key:
+    raise RuntimeError("Missing Supabase URL or Secret Key string credentials in environment variables configuration.")
 
-# The isolated global database connection instance
-supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+custom_http_client = httpx.Client(
+    http1=True,
+    http2=False,
+    timeout=60.0
+)
+
+supabase_client: Client = create_client(
+    supabase_url,
+    supabase_key
+)
+
+supabase_client.postgrest.session = custom_http_client
+
+@atexit.register
+def close_http_client():
+    custom_http_client.close()

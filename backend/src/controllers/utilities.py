@@ -1,66 +1,80 @@
-# src/controllers/utilities.py
 import os
-import datetime
 import jwt
-from flask import request
+import datetime
 from functools import wraps
+from flask import request, make_response
 from src.views.responses import ApiResponse
+from src.models.database import supabase_client
 
-JWT_SECRET = os.getenv("JWT_SECRET", "scrubpoint_super_secret_session_token_key_2026!")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY:
+    raise RuntimeError(
+        "JWT_SECRET_KEY is not set in your environment. "
+        "Generate one with `openssl rand -hex 32` and add it to your .env file — "
+        "the server will not start without it."
+    )
 
 class SecurityUtils:
     @staticmethod
     def generate_token(admin_payload):
-        """Generates a secure JWT token that expires in 12 hours"""
-        try:
-            payload = {
-                "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12),
-                "iat": datetime.datetime.utcnow(),
-                "sub": str(admin_payload["id"]),
-                "email": str(admin_payload["email"]),
-                "role": str(admin_payload["role"])
-            }
-            token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
-            if isinstance(token, bytes):
-                return token.decode('utf-8')
-            return token
-        except Exception as e:
-            return str(e)
+        payload = {
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24),
+            "iat": datetime.datetime.utcnow(),
+            "sub": str(admin_payload.get("id")),
+            "email": str(admin_payload.get("email")),
+            "role": str(admin_payload.get("role"))
+        }
+        return jwt.encode(payload, JWT_SECRET_KEY, algorithm="HS256")
 
 def token_required(required_role=None):
-    """Decorator matrix to guard admin paths."""
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            token = None
-            
-            if "Authorization" in request.headers:
-                auth_header = request.headers["Authorization"]
-                if auth_header.startswith("Bearer "):
-                    parts = auth_header.split(" ")
-                    if len(parts) == 2:
-                        token = parts[1]
+            clean_token_str = None
 
-            if not token:
-                return ApiResponse.error(message="Access denied. Authentication token missing.", status_code=401)
+            if "Authorization" in request.headers:
+                auth_header = str(request.headers["Authorization"])
+                if auth_header.startswith("Bearer "):
+                    raw_extracted = auth_header.replace("Bearer ", "").strip()
+                    for char in ['[', ']', '"', "'", " "]:
+                        raw_extracted = raw_extracted.replace(char, "")
+                    clean_token_str = raw_extracted
+
+            if not clean_token_str:
+                return ApiResponse.error(message="Authentication token missing identifier context.", status_code=401)
 
             try:
-                data = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+                decoded_data = jwt.decode(str(clean_token_str).strip(), JWT_SECRET_KEY, algorithms=["HS256"])
+
                 current_admin = {
-                    "id": data["sub"],
-                    "email": data["email"],
-                    "role": data["role"]
+                    "id": decoded_data.get("sub"),
+                    "email": decoded_data.get("email"),
+                    "role": decoded_data.get("role")
                 }
-                
-                if required_role and current_admin["role"] != required_role:
-                    if required_role == "Super Admin" and current_admin["role"] == "Admin":
-                        return ApiResponse.error(message="Forbidden. Super Admin access required.", status_code=403)
+
+                live_check = supabase_client.table("admins").select("id", "is_active").eq("id", current_admin.get("id")).execute()
+
+                if not live_check.data or len(live_check.data) == 0:
+                    return ApiResponse.error(message="Account deleted or non-existent. Access revoked.", status_code=401)
+
+                if not live_check.data[0].get("is_active", True):
+                    return ApiResponse.error(message="This administrative account profile has been inactivated by the Super Admin.", status_code=401)
+
+                if required_role and current_admin.get("role") != required_role:
+                    return ApiResponse.error(message="Unauthorized resource privilege mismatch.", status_code=403)
 
             except jwt.ExpiredSignatureError:
-                return ApiResponse.error(message="Session expired. Please log in again.", status_code=401)
-            except jwt.InvalidTokenError:
-                return ApiResponse.error(message="Invalid token mapping.", status_code=401)
+                return ApiResponse.error(message="Admin token signature has expired.", status_code=401)
+            except Exception as e:
+                print(f"Decryption processing catch: {str(e)}")
+                return ApiResponse.error(message="Invalid authorization token tracking structures.", status_code=401)
 
-            return f(current_admin, *args, **kwargs)
+            new_args = list(args)
+            if len(new_args) > 1:
+                new_args.insert(1, current_admin)
+            else:
+                new_args.append(current_admin)
+
+            return f(*tuple(new_args), **kwargs)
         return decorated
     return decorator

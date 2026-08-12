@@ -1,6 +1,4 @@
-# src/views/schemas.py
 import re
-
 class ProductSchema:
     @staticmethod
     def validate_and_clean(json_data):
@@ -8,9 +6,13 @@ class ProductSchema:
         name = json_data.get("name")
         price = json_data.get("price")
         category = json_data.get("category")
+        image_url = json_data.get("image_url")
 
         if not name or not str(name).strip():
             errors.append("Product name is required.")
+        elif len(str(name).strip()) < 2:
+            errors.append("Product name must be at least 2 characters long.")
+
         if price is None:
             errors.append("Product price is required.")
         else:
@@ -22,17 +24,25 @@ class ProductSchema:
 
         if not category or not str(category).strip():
             errors.append("Product category field is required.")
+        elif len(str(category).strip()) < 2:
+            errors.append("Category name is too short.")
+
+
+        if image_url:
+            if not str(image_url).startswith("http"):
+                errors.append("Image URL is invalid.")
 
         cleaned_data = {
             "name": str(name).strip() if name else None,
             "description": str(json_data.get("description", "")).strip(),
-            "price": float(price) if price else 0.0,
+            "price": float(price) if price is not None else 0.0,
             "category": str(category).strip() if category else None,
             "is_featured": bool(json_data.get("is_featured", False)),
             "is_out_of_stock": bool(json_data.get("is_out_of_stock", False)),
-            "image_url": json_data.get("image_url")
+            "image_url": image_url,
+            "sizes_available": str(json_data.get("sizes_available", "")).strip() if json_data.get("sizes_available") else None,
+            "colors_available": str(json_data.get("colors_available", "")).strip() if json_data.get("colors_available") else None
         }
-
         return errors, cleaned_data
 
 
@@ -43,9 +53,9 @@ class AdminSchema:
         email = str(json_data.get("email", "")).strip()
         password = str(json_data.get("password", ""))
 
-        if len(email) < 5:
-            errors.append("Email must be at least 5 characters long.")
-        
+        if len(email) < 8:
+            errors.append("Email must be at least 8 characters long.")
+
         email_regex = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
         if not re.match(email_regex, email):
             errors.append("Invalid email format. Email must contain letters, numbers, '@', and a valid domain extension like '.com'.")
@@ -67,14 +77,23 @@ class ReviewSchema:
     def validate_and_clean(json_data):
         errors = []
         name = json_data.get("reviewer_name")
+        contact = json_data.get("reviewer_contact")
         rating = json_data.get("rating")
         comment = json_data.get("comment")
 
         if not name or not str(name).strip():
             errors.append("Reviewer name field is required.")
+        elif len(str(name).strip()) < 2:
+            errors.append("Reviewer name is too short.")
+
         if not comment or not str(comment).strip():
             errors.append("Review comment text is required.")
-            
+        elif len(str(comment)) > 1000:
+            errors.append("Review comment cannot exceed 1000 characters.")
+
+        if contact and len(str(contact)) > 100:
+            errors.append("Reviewer contact is too long.")
+
         try:
             rating_int = int(rating)
             if rating_int < 1 or rating_int > 5:
@@ -84,6 +103,7 @@ class ReviewSchema:
 
         cleaned_payload = {
             "reviewer_name": str(name).strip() if name else None,
+            "reviewer_contact": str(contact).strip() if contact else "Not provided",
             "title_or_role": str(json_data.get("title_or_role", "Healthcare Professional")).strip(),
             "rating": int(rating) if rating else 5,
             "comment": str(comment).strip() if comment else None,

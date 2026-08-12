@@ -3,3 +3,11 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Development/testing scripts
+seed_admin.py
+
+# Frontend dependencies/build files
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/

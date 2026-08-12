@@ -1,53 +1,95 @@
-# app.py
+from src.config import FRONTEND_ORIGIN
 import os
-from flask import Flask
+from flask import Flask, make_response
 from flask_restful import Api
 from flask_cors import CORS
 from dotenv import load_dotenv
+from src.controllers.image_upload import AdminImageUploadResource
+from src.controllers.walk_in_order import WalkInOrderResource
+from src.controllers.packages import PackagesResource
 
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
-api = Api(app)
-
-# =====================================================================
-# SYSTEM RESOURCE GATEWAY MAPPINGS
-# =====================================================================
-from src.controllers.routes import (
-    ProductListResource, 
-    ProductResource, 
-    ProductRestoreResource,
-    CategoryListResource,
-    AdminDashboardResource,
-    AdminProfileResource,
-    AdminLoginResource, 
-    OrderResource,
-    SuperAdminManagementResource,
-    ReviewResource
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": [FRONTEND_ORIGIN]
+        }
+    },
+    supports_credentials=True
 )
 
-# Core Product Catalog Mappings
+api = Api(app)
+
+@app.after_request
+def apply_cors_fallback_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Access-Control-Allow-Origin, X-Requested-With"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    return response
+
+from src.controllers.routes import (
+    ProductListResource,
+    ProductResource,
+    CategoryListResource,
+    AdminDashboardResource,
+    AdminLoginResource,
+    OrderResource,
+    OrderFulfillResource,
+    ReviewResource,
+    AdminReviewResource,
+    ContactMessageResource,
+    AdminProfileResource,
+    TrashResource
+)
+
+from src.controllers.analytics_routes import (
+    EnterpriseAnalyticsResource,
+    StaffManagementResource,
+    StaffStatusToggleResource
+)
+
 api.add_resource(ProductListResource, '/api/products')
 api.add_resource(ProductResource, '/api/products/<int:product_id>')
-api.add_resource(ProductRestoreResource, '/api/products/<int:product_id>/restore')
+api.add_resource(PackagesResource, '/api/packages', '/api/packages/<int:package_id>')
 api.add_resource(CategoryListResource, '/api/categories')
 
-# Administrative Infrastructure Dashboard Mappings
-api.add_resource(AdminDashboardResource, '/api/admin/dashboard')
-api.add_resource(AdminProfileResource, '/api/admin/profile')
-api.add_resource(AdminLoginResource, '/api/admin/login')
-api.add_resource(SuperAdminManagementResource, '/api/admin/staff')
-
-# Public Customer Checkout Tracking & Review Portals
 api.add_resource(OrderResource, '/api/orders')
-api.add_resource(ReviewResource, '/api/reviews')
+api.add_resource(OrderFulfillResource, '/api/orders/<string:order_id>/fulfill')
 
-# 4. Production Health Check Endpoint
+api.add_resource(AdminDashboardResource, '/api/admin/dashboard')
+api.add_resource(AdminLoginResource, '/api/admin/login')
+api.add_resource(AdminImageUploadResource, '/api/admin/upload-image')
+api.add_resource(TrashResource, '/api/admin/trash', '/api/admin/trash/<int:product_id>')
+
+
+api.add_resource(ReviewResource, '/api/reviews')
+api.add_resource(AdminReviewResource, '/api/admin/reviews/<string:review_id>', '/api/admin/reviews')
+
+
+api.add_resource(ContactMessageResource, '/api/contact/messages/<int:message_id>', '/api/contact/messages')
+
+
+api.add_resource(AdminProfileResource, '/api/admin/profile')
+
+
+api.add_resource(EnterpriseAnalyticsResource, '/api/admin/analytics')
+api.add_resource(StaffManagementResource, '/api/admin/staff/<string:admin_id>', '/api/admin/staff')
+api.add_resource(StaffStatusToggleResource, '/api/admin/staff/<string:admin_id>/toggle')
+api.add_resource(WalkInOrderResource, '/api/admin/walk-in-order')
+
 @app.route('/health', methods=['GET'])
 def server_health():
-    return {"status": "ok", "message": "Scrub Point Core Engine Online"}, 200
+    response = make_response({"status": "ok", "message": "Scrub Point Core Engine Online"}, 200)
+    return response
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     server_port = int(os.getenv("PORT", 5000))
-    app.run(debug=True, port=server_port)
+    app.run(
+        host="0.0.0.0",
+        port=server_port,
+        debug=os.getenv("FLASK_ENV") != "production"
+    )

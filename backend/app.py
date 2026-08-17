@@ -43,7 +43,10 @@ from src.controllers.routes import (
     AdminReviewResource,
     ContactMessageResource,
     AdminProfileResource,
-    TrashResource
+    TrashResource,
+    OrderConfirmResource,
+    OrderCancelResource
+
 )
 
 from src.controllers.analytics_routes import (
@@ -59,22 +62,20 @@ api.add_resource(CategoryListResource, '/api/categories')
 
 api.add_resource(OrderResource, '/api/orders')
 api.add_resource(OrderFulfillResource, '/api/orders/<string:order_id>/fulfill')
+api.add_resource(OrderConfirmResource, '/api/orders/<string:order_id>/confirm')
+api.add_resource(OrderCancelResource, '/api/orders/<string:order_id>/cancel')
 
 api.add_resource(AdminDashboardResource, '/api/admin/dashboard')
 api.add_resource(AdminLoginResource, '/api/admin/login')
 api.add_resource(AdminImageUploadResource, '/api/admin/upload-image')
 api.add_resource(TrashResource, '/api/admin/trash', '/api/admin/trash/<int:product_id>')
 
-
 api.add_resource(ReviewResource, '/api/reviews')
 api.add_resource(AdminReviewResource, '/api/admin/reviews/<string:review_id>', '/api/admin/reviews')
 
-
 api.add_resource(ContactMessageResource, '/api/contact/messages/<int:message_id>', '/api/contact/messages')
 
-
 api.add_resource(AdminProfileResource, '/api/admin/profile')
-
 
 api.add_resource(EnterpriseAnalyticsResource, '/api/admin/analytics')
 api.add_resource(StaffManagementResource, '/api/admin/staff/<string:admin_id>', '/api/admin/staff')

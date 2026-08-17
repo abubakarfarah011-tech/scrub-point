@@ -162,6 +162,19 @@ class OrderRepository:
 
         return response.data[0] if response.data else None
 
+    @staticmethod
+    def update_order_status(order_id, status):
+        response = (
+        supabase_client
+        .table("whatsapp_orders")
+        .update({
+            "order_status": status
+        })
+        .eq("id", order_id)
+        .execute()
+    )
+        return response.data[0] if response.data else None
+
 class ReviewRepository:
     @staticmethod
     def get_approved_reviews():

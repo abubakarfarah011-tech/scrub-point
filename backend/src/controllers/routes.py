@@ -238,6 +238,59 @@ class OrderFulfillResource(Resource):
                 status_code=500
             )
 
+class OrderConfirmResource(Resource):
+    def options(self, order_id=None):
+        return make_response("", 200)
+
+    @token_required()
+    def patch(self, current_admin, order_id):
+        try:
+            confirmed = OrderService.confirm_order(order_id)
+
+            if not confirmed:
+                return ApiResponse.error(
+                    message="Order not found or is not awaiting WhatsApp confirmation.",
+                    status_code=400
+                )
+
+            return ApiResponse.success(
+                data=confirmed,
+                message="WhatsApp order confirmed successfully."
+            )
+
+        except Exception as e:
+            return ApiResponse.error(
+                message=str(e),
+                status_code=500
+            )
+
+
+class OrderCancelResource(Resource):
+    def options(self, order_id=None):
+        return make_response("", 200)
+
+    @token_required()
+    def patch(self, current_admin, order_id):
+        try:
+            cancelled = OrderService.cancel_order(order_id)
+
+            if not cancelled:
+                return ApiResponse.error(
+                    message="Order not found or is not awaiting WhatsApp confirmation.",
+                    status_code=400
+                )
+
+            return ApiResponse.success(
+                data=cancelled,
+                message="Order cancelled successfully."
+            )
+
+        except Exception as e:
+            return ApiResponse.error(
+                message=str(e),
+                status_code=500
+            )
+
 class ReviewResource(Resource):
     def options(self):
         return make_response("", 200)

@@ -224,12 +224,43 @@ class OrderService:
                 "No variants selected"
             ),
             "total_price": float(orderPayload.get("total_price", 0.0)),
-            "order_status": "Pending"
+            "order_status": "Awaiting WhatsApp"
         })
 
     @staticmethod
     def fetch_orders():
         return OrderRepository.get_all_orders()
+
+    @staticmethod
+    def confirm_order(order_id):
+        order = OrderRepository.get_by_id(order_id)
+
+        if not order:
+            return None
+
+        if order.get("order_status") != "Awaiting WhatsApp":
+            return None
+
+        return OrderRepository.update_order_status(
+        order_id,
+        "Pending"
+    )
+
+
+    @staticmethod
+    def cancel_order(order_id):
+        order = OrderRepository.get_by_id(order_id)
+
+        if not order:
+            return None
+
+        if order.get("order_status") != "Awaiting WhatsApp":
+            return None
+
+        return OrderRepository.update_order_status(
+        order_id,
+        "Cancelled"
+    )
 
     @staticmethod
     def process_delivery_fulfillment(order_id, admin_email):

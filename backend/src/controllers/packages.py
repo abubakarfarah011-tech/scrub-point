@@ -27,7 +27,6 @@ class PackagesResource(Resource):
             package_description = request_payload.get('description', '').strip()
             products_summary = request_payload.get('products_summary', [])
             image_url = request_payload.get('image_url', '')
-
             is_time_limited = bool(request_payload.get('is_time_limited', False))
             available_from_date = request_payload.get('available_from_date') or None
             available_until_date = request_payload.get('available_until_date') or None
@@ -40,13 +39,14 @@ class PackagesResource(Resource):
                 "name": package_name,
                 "description": package_description,
                 "price": float(package_price),
+                "stock_quantity": int(request_payload.get('stock_quantity', 0)),
                 "products_summary": products_summary,
                 "image_url": image_url,
                 "is_time_limited": is_time_limited,
                 "available_from_date": available_from_date,
                 "available_until_date": available_until_date,
                 "available_until_time": available_until_time
-            }
+                }
 
             inserted_package_res = supabase_client.table("packages").insert(package_database_payload).execute()
 
@@ -67,7 +67,7 @@ class PackagesResource(Resource):
             update_payload = {}
             fields_list = [
                 "name", "description", "price", "image_url", "is_time_limited",
-                "available_from_date", "available_until_date", "available_until_time"
+                "available_from_date", "available_until_date", "available_until_time", "stock_quantity"
             ]
             for field in fields_list:
                 if field in json_data:

@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from src.models.database import supabase_client
+import logging
 
+logger = logging.getLogger(__name__)
 class ProductRepository:
     @staticmethod
     def get_all(category=None, search=None, page=1, limit=20, sort_by="newest"):
@@ -207,4 +209,4 @@ class AuditRepository:
         try:
             supabase_client.table("audit_logs").insert(payload).execute()
         except Exception as e:
-         print(f"Audit log failed: {e}")
+         logger.exception("Audit log write failed.")

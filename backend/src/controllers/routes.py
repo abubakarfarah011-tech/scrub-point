@@ -6,7 +6,7 @@ from src.views.services import ProductService, AuthService, OrderService, Review
 from src.views.responses import ApiResponse
 from src.controllers.utilities import token_required, SecurityUtils
 from src.models.database import supabase_client
-from src.config import FRONTEND_ORIGIN
+from src.extensions import limiter
 
 class ProductListResource(Resource):
     def options(self):
@@ -16,7 +16,6 @@ class ProductListResource(Resource):
         category = request.args.get("category")
         search = request.args.get("search")
         sort_by = request.args.get("sort", "newest")
-        print("SORT =", sort_by)
         try:
             page = int(request.args.get("page", 1))
             limit = int(request.args.get("limit", 20))
@@ -100,12 +99,7 @@ class ProductResource(Resource):
 
 class TrashResource(Resource):
     def options(self, product_id=None):
-        response = make_response("", 200)
-        response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET, PATCH, DELETE, OPTIONS"
-        return response
+        return make_response("", 200)
 
     @token_required()
     def get(self, current_admin):
@@ -159,21 +153,31 @@ class AdminLoginResource(Resource):
     def options(self):
         return make_response("", 200)
 
+    @limiter.limit("5 per minute")
     def post(self):
         json_data = request.get_json() or {}
-        admin = AuthService.authenticate_admin(json_data.get("email"), json_data.get("password"))
+        admin = AuthService.authenticate_admin(
+            json_data.get("email"),
+            json_data.get("password")
+        )
+
         if not admin:
-            return ApiResponse.error(message="Invalid credentials.", status_code=401)
+            return ApiResponse.error(
+                message="Invalid credentials.",
+                status_code=401
+            )
+
         token = SecurityUtils.generate_token(admin)
+
         return ApiResponse.success(
-    data={
-        "id": admin["id"],
-        "token": token,
-        "role": admin["role"],
-        "email": admin["email"]
-    },
-    message="Session opened."
-)
+            data={
+                "id": admin["id"],
+                "token": token,
+                "role": admin["role"],
+                "email": admin["email"]
+            },
+            message="Session opened."
+        )
 
 class OrderResource(Resource):
     def options(self):
@@ -258,11 +262,11 @@ class OrderConfirmResource(Resource):
                 message="WhatsApp order confirmed successfully."
             )
 
-        except Exception as e:
+        except Exception:
             return ApiResponse.error(
-                message=str(e),
+                message="Unable to confirm the order at this time.",
                 status_code=500
-            )
+                )
 
 
 class OrderCancelResource(Resource):
@@ -285,11 +289,11 @@ class OrderCancelResource(Resource):
                 message="Order cancelled successfully."
             )
 
-        except Exception as e:
+        except Exception:
             return ApiResponse.error(
-                message=str(e),
+                message="Unable to cancel the order at this time.",
                 status_code=500
-            )
+                )
 
 class ReviewResource(Resource):
     def options(self):
@@ -308,12 +312,7 @@ class ReviewResource(Resource):
 
 class AdminReviewResource(Resource):
     def options(self, review_id=None):
-        response = make_response("", 200)
-        response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"
-        return response
+        return make_response("", 200)
 
     @token_required()
     def get(self, current_admin):
@@ -335,12 +334,7 @@ class AdminReviewResource(Resource):
 
 class ContactMessageResource(Resource):
     def options(self, message_id=None):
-        response = make_response("", 200)
-        response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
-        return response
+        return make_response("", 200)
 
     def post(self):
         json_data = request.get_json() or {}

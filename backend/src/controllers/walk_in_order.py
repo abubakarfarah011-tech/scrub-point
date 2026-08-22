@@ -3,6 +3,9 @@ from flask import request, make_response
 from flask_restful import Resource
 from src.models.database import supabase_client
 from src.controllers.utilities import token_required
+import logging
+
+logger = logging.getLogger(__name__)
 
 class WalkInOrderResource(Resource):
     def options(self, *args, **kwargs):
@@ -77,8 +80,11 @@ class WalkInOrderResource(Resource):
             }, 201
 
         except Exception as e:
-            print(f"[POS CRASH LOG] Runtime Exception: {str(e)}")
-            return {"success": False, "message": f"POS Pipeline Stockout Failure: {str(e)}"}, 500
+            logger.exception("Walk-in order processing failed.")
+            return {
+                "success": False,
+                "message": "Unable to process the walk-in order at this time."
+                }, 500
 
     @token_required()
     def get(self, current_admin, *args, **kwargs):
@@ -92,5 +98,8 @@ class WalkInOrderResource(Resource):
             )
             return {"success": True, "data": response.data if response.data else []}, 200
         except Exception as e:
-            print(f"[POS HISTORY FETCH CRASH LOG] Runtime Exception: {str(e)}")
-            return {"success": False, "message": f"Failed to fetch walk-in sales history: {str(e)}"}, 500
+            logger.exception("Walk-in sales history fetch failed.")
+            return {
+                "success": False,
+                "message": "Unable to fetch walk-in sales history at this time."
+                }, 500

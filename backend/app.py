@@ -1,21 +1,26 @@
-from src.config import FRONTEND_ORIGIN
 import os
-from flask import Flask, make_response
+
+from dotenv import load_dotenv
+from flask import Flask, make_response, request
 from flask_restful import Api
 from flask_cors import CORS
-from dotenv import load_dotenv
+
+load_dotenv()
+
+from src.config import FRONTEND_ORIGINS
+from src.extensions import limiter
 from src.controllers.image_upload import AdminImageUploadResource
 from src.controllers.walk_in_order import WalkInOrderResource
 from src.controllers.packages import PackagesResource
 
-load_dotenv()
 
 app = Flask(__name__)
+limiter.init_app(app)
 CORS(
     app,
     resources={
         r"/api/*": {
-            "origins": [FRONTEND_ORIGIN]
+            "origins": FRONTEND_ORIGINS
         }
     },
     supports_credentials=True
@@ -25,10 +30,23 @@ api = Api(app)
 
 @app.after_request
 def apply_cors_fallback_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
+    request_origin = request.headers.get("Origin")
+
+    if request_origin in FRONTEND_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = request_origin
+        response.headers["Vary"] = "Origin"
+
     response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Access-Control-Allow-Origin, X-Requested-With"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = (
+        "Content-Type, Authorization, Access-Control-Allow-Origin, X-Requested-With"
+    )
+    response.headers["Access-Control-Allow-Methods"] = (
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    )
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     return response
 
 from src.controllers.routes import (

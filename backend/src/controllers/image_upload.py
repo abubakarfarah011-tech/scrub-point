@@ -6,6 +6,9 @@ from flask_restful import Resource
 from PIL import Image, UnidentifiedImageError
 from src.models.database import supabase_client
 from src.controllers.utilities import token_required
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AdminImageUploadResource(Resource):
 
@@ -308,9 +311,7 @@ class AdminImageUploadResource(Resource):
 
         except Exception as e:
 
-            print(
-                f"[IMAGE UPLOAD ERROR] {str(e)}"
-            )
+            logger.exception("Image upload failed.")
 
             return {
                 "success": False,

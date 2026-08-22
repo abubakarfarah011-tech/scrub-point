@@ -4,8 +4,9 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# Development/testing scripts
+# Development/testing/maintenance scripts
 seed_admin.py
+update_admin.py
 
 # Frontend dependencies/build files
 frontend/node_modules/

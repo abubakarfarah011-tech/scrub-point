@@ -1,4 +1,3 @@
-
 from flask import request, make_response
 from flask_restful import Resource
 from src.views.analytics_services import AnalyticsService
@@ -7,17 +6,11 @@ from src.views.schemas import AdminSchema
 from src.models.database import supabase_client
 from src.views.responses import ApiResponse
 from src.controllers.utilities import token_required
-from src.config import FRONTEND_ORIGIN
 
 
 class EnterpriseAnalyticsResource(Resource):
     def options(self):
-        response = make_response("", 200)
-        response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
-        return response
+        return make_response("", 200)
 
     @token_required()
     def get(self, current_admin):
@@ -26,19 +19,18 @@ class EnterpriseAnalyticsResource(Resource):
 
         try:
             intelligence_data = AnalyticsService.compute_enterprise_intelligence(start_date, end_date)
-        except ValueError as e:
-            return ApiResponse.error(message=str(e), status_code=400)
+        except ValueError:
+            return ApiResponse.error(
+                message="Invalid analytics date range or filter parameters.",
+                status_code=400
+                )
+
 
         return ApiResponse.success(data=intelligence_data, message="Enterprise financial intelligence analytics metrics compiled successfully.")
 
 class StaffManagementResource(Resource):
     def options(self, admin_id=None):
-        response = make_response("", 200)
-        response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
-        return response
+        return make_response("", 200)
 
     @token_required()
     def get(self, current_admin):
@@ -88,12 +80,7 @@ class StaffManagementResource(Resource):
 
 class StaffStatusToggleResource(Resource):
     def options(self, admin_id):
-        response = make_response("", 200)
-        response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "PATCH, OPTIONS"
-        return response
+        return make_response("", 200)
 
     @token_required()
     def patch(self, current_admin, admin_id):

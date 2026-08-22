@@ -2,6 +2,9 @@ from flask import request
 from flask_restful import Resource
 from src.models.database import supabase_client
 from src.controllers.utilities import token_required
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PackagesResource(Resource):
     def get(self, *args, **kwargs):
@@ -14,8 +17,11 @@ class PackagesResource(Resource):
                 "data": packages_query_res.data if packages_query_res.data else []
             }, 200
         except Exception as e:
-            print(f"[PACKAGES REPOSITORY FETCH ERROR] Exception: {str(e)}")
-            return {"success": False, "message": f"Server failure fetching package records: {str(e)}"}, 500
+            logger.exception("Packages repository fetch failed.")
+            return {
+                "success": False,
+                "message": "Server failure while fetching package records."
+                }, 500
 
     @token_required()
     def post(self, current_admin):
@@ -57,8 +63,11 @@ class PackagesResource(Resource):
             }, 201
 
         except Exception as e:
-            print(f"[PACKAGE PIPELINE INSERT ERROR] Exception: {str(e)}")
-            return {"success": False, "message": f"Package pipeline insert failure: {str(e)}"}, 500
+            logger.exception("Package creation failed.")
+            return {
+                "success": False,
+                "message": "Unable to create the package at this time."
+                }, 500
 
     @token_required()
     def put(self, current_admin, package_id):
@@ -88,8 +97,11 @@ class PackagesResource(Resource):
             }, 200
 
         except Exception as e:
-            print(f"[PACKAGE UPDATE ERROR] Exception: {str(e)}")
-            return {"success": False, "message": f"Package update failure: {str(e)}"}, 500
+            logger.exception("Package update failed.")
+            return {
+                "success": False,
+                "message": "Unable to update the package at this time."
+                }, 500
 
     @token_required()
     def delete(self, current_admin, package_id):
@@ -114,8 +126,8 @@ class PackagesResource(Resource):
             }, 200
 
         except Exception as e:
-            print(f"[PACKAGE DELETE ERROR] {str(e)}")
+            logger.exception("Package deletion failed.")
             return {
                 "success": False,
-                "message": f"Failed to delete package: {str(e)}"
-            }, 500
+                "message": "Unable to delete the package at this time."
+                }, 500

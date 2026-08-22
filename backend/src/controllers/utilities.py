@@ -65,10 +65,12 @@ def token_required(required_role=None):
 
             except jwt.ExpiredSignatureError:
                 return ApiResponse.error(message="Admin token signature has expired.", status_code=401)
-            except Exception as e:
-                print(f"Decryption processing catch: {str(e)}")
-                return ApiResponse.error(message="Invalid authorization token tracking structures.", status_code=401)
 
+            except Exception:
+                return ApiResponse.error(
+                    message="Invalid authorization token tracking structures.",
+                    status_code=401
+                    )
             new_args = list(args)
             if len(new_args) > 1:
                 new_args.insert(1, current_admin)

@@ -215,17 +215,25 @@ class DashboardService:
 class OrderService:
     @staticmethod
     def log_whatsapp_click(orderPayload):
+        try:
+            order_quantity = int(orderPayload.get("quantity", 1))
+        except (TypeError, ValueError):
+            order_quantity = 1
+
+        order_quantity = max(order_quantity, 1)
+
         return OrderRepository.create_order({
             "product_name": orderPayload.get("product_name"),
             "product_id": orderPayload.get("product_id"),
             "package_id": orderPayload.get("package_id"),
+            "quantity": order_quantity,
             "variant_details": orderPayload.get(
                 "variant_details",
                 "No variants selected"
-            ),
-            "total_price": float(orderPayload.get("total_price", 0.0)),
-            "order_status": "Awaiting WhatsApp"
-        })
+        ),
+        "total_price": float(orderPayload.get("total_price", 0.0)),
+        "order_status": "Awaiting WhatsApp"
+    })
 
     @staticmethod
     def fetch_orders():
@@ -269,7 +277,11 @@ class OrderService:
         if not order_records:
             return None
 
-        order = order_records if isinstance(order_records, dict) else order_records[0]
+        order = (
+            order_records
+            if isinstance(order_records, dict)
+            else order_records[0]
+        )
 
         if order.get("order_status") == "Delivered":
             return None
@@ -278,70 +290,50 @@ class OrderService:
         target_package_id = order.get("package_id")
         target_product_name = order.get("product_name")
 
+        try:
+            qty_ordered = int(order.get("quantity") or 1)
+        except (TypeError, ValueError):
+            qty_ordered = 1
+
+        if qty_ordered <= 0:
+            qty_ordered = 1
+
+        if not order.get("quantity"):
+            try:
+                qty_str = order.get("variant_details", "Quantity: 1")
+
+                for segment in qty_str.split("|"):
+                    if "Quantity:" in segment:
+                        qty_ordered = int(
+                            segment.replace("Quantity:", "").strip()
+                        )
+                        break
+            except (TypeError, ValueError):
+                qty_ordered = 1
+
         if target_package_id:
-            pkg_record = (
-                supabase_client
-                .table("packages")
-                .select("*")
-                .eq("id", target_package_id)
-                .execute()
+
+            supabase_client.rpc(
+            "fulfill_package_order_atomic",
+            {
+                "p_order_id": int(order_id)
+            }
+        ).execute()
+
+        pkg_record = (
+            supabase_client
+            .table("packages")
+            .select("name")
+            .eq("id", target_package_id)
+            .execute()
+        )
+
+        if pkg_record.data:
+            target_product_name = (
+                target_product_name
+                or pkg_record.data[0].get("name")
             )
-
-            if not pkg_record.data or len(pkg_record.data) == 0:
-                raise Exception("Package record not found for fulfillment.")
-
-            parent_package = pkg_record.data[0]
-            components_list = parent_package.get("products_summary") or []
-
-            if isinstance(components_list, str):
-                try:
-                    components_list = json.loads(components_list)
-                except Exception:
-                    components_list = []
-
-            for comp in components_list:
-                comp_id = comp.get("product_id")
-                qty_needed = int(comp.get("quantity", 1))
-
-                c_record = (
-                    supabase_client
-                    .table("products")
-                    .select("stock_quantity")
-                    .eq("id", comp_id)
-                    .execute()
-                )
-
-                if not c_record.data:
-                    raise Exception(f"Package component product {comp_id} not found.")
-
-                available = int(c_record.data[0].get("stock_quantity", 0))
-
-                if available < qty_needed:
-                    raise Exception(
-                        f"INSUFFICIENT_STOCK|Requested:{qty_needed}|Available:{available}|Shortage:{qty_needed - available}"
-                    )
-
-            for comp in components_list:
-                comp_id = comp.get("product_id")
-                qty_needed = int(comp.get("quantity", 1))
-
-                c_record = (
-                    supabase_client
-                    .table("products")
-                    .select("stock_quantity")
-                    .eq("id", comp_id)
-                    .execute()
-                )
-
-                current_stock = int(c_record.data[0].get("stock_quantity", 0))
-                new_stock = current_stock - qty_needed
-
-                supabase_client.table("products").update({
-                    "stock_quantity": new_stock,
-                    "is_out_of_stock": new_stock == 0
-                }).eq("id", comp_id).execute()
-
-            target_product_name = target_product_name or parent_package.get("name")
+            updated_order = OrderRepository.get_by_id(order_id)
 
         elif target_product_id:
             prod_record = (
@@ -352,125 +344,213 @@ class OrderService:
                 .execute()
             )
 
-            if prod_record.data and len(prod_record.data) > 0:
-                parent_product = prod_record.data[0]
+            if not prod_record.data:
+                raise Exception(
+                    f"Product {target_product_id} not found for fulfillment."
+                )
 
+            parent_product = prod_record.data[0]
 
-                if (
-                    parent_product.get("is_student_package")
-                    and parent_product.get("description")
-                ):
-                    desc_text = parent_product.get("description", "")
+            if (
+                parent_product.get("is_student_package")
+                and parent_product.get("description")
+            ):
+                desc_text = parent_product.get("description", "")
 
-                    if "[Bundle JSON:" in desc_text:
-                        try:
-                            start_idx = (
-                                desc_text.find("[Bundle JSON:")
-                                + len("[Bundle JSON:")
+                if "[Bundle JSON:" in desc_text:
+                    try:
+                        start_idx = (
+                            desc_text.find("[Bundle JSON:")
+                            + len("[Bundle JSON:")
+                        )
+                        end_idx = desc_text.find("]", start_idx)
+
+                        json_str = desc_text[
+                            start_idx:end_idx
+                        ].strip()
+
+                        components_list = json.loads(json_str)
+
+                    except Exception:
+                        raise Exception(
+                            "Unable to read the student bundle component list."
+                        )
+
+                    for comp in components_list:
+                        comp_id = comp.get("id")
+
+                        per_bundle_qty = int(
+                            comp.get("quantity", 1)
+                        )
+
+                        qty_needed = (
+                            per_bundle_qty * qty_ordered
+                        )
+
+                        c_record = (
+                            supabase_client
+                            .table("products")
+                            .select("stock_quantity")
+                            .eq("id", comp_id)
+                            .execute()
+                        )
+
+                        if not c_record.data:
+                            raise Exception(
+                                f"Bundle component {comp_id} not found."
                             )
-                            end_idx = desc_text.find("]", start_idx)
 
-                            json_str = desc_text[start_idx:end_idx].strip()
-                            components_list = json.loads(json_str)
+                        available = int(
+                            c_record.data[0].get(
+                                "stock_quantity",
+                               0
+                            )
+                        )
 
+                        if available < qty_needed:
+                            raise Exception(
+                                "INSUFFICIENT_STOCK"
+                                f"|Requested:{qty_needed}"
+                                f"|Available:{available}"
+                                f"|Shortage:{qty_needed - available}"
+                            )
 
-                            for comp in components_list:
-                                comp_id = comp.get("id")
-                                qty_needed = int(comp.get("quantity", 1))
+                    for comp in components_list:
+                        comp_id = comp.get("id")
 
-                                c_record = (
-                                    supabase_client
-                                    .table("products")
-                                    .select("stock_quantity")
-                                    .eq("id", comp_id)
-                                    .execute()
-                                )
+                        per_bundle_qty = int(
+                            comp.get("quantity", 1)
+                        )
 
-                                if not c_record.data:
-                                    raise Exception(
-                                        f"Bundle component {comp_id} not found."
-                                    )
+                        qty_needed = (
+                            per_bundle_qty * qty_ordered
+                        )
 
-                                available = int(
-                                    c_record.data[0].get("stock_quantity", 0)
-                                )
+                        c_record = (
+                            supabase_client
+                            .table("products")
+                            .select("stock_quantity")
+                            .eq("id", comp_id)
+                            .execute()
+                        )
 
-                                if available < qty_needed:
-                                    raise Exception(
-                                        f"INSUFFICIENT_STOCK|Requested:{qty_needed}|Available:{available}|Shortage:{qty_needed-available}"
-                                    )
+                        current_stock = int(
+                            c_record.data[0].get(
+                                "stock_quantity",
+                                0
+                            )
+                        )
 
+                        new_stock = (
+                            current_stock - qty_needed
+                        )
 
-                            for comp in components_list:
-                                comp_id = comp.get("id")
-                                qty_needed = int(comp.get("quantity", 1))
-
-                                c_record = (
-                                    supabase_client
-                                    .table("products")
-                                    .select("stock_quantity")
-                                    .eq("id", comp_id)
-                                    .execute()
-                                )
-
-                                current_stock = int(
-                                    c_record.data[0].get("stock_quantity", 0)
-                                )
-
-                                new_stock = current_stock - qty_needed
-
-                                supabase_client.table("products").update({
-                                    "stock_quantity": new_stock,
-                                    "is_out_of_stock": new_stock == 0
-                                }).eq("id", comp_id).execute()
-
-                        except Exception:
-                            raise
-
+                        supabase_client.table(
+                            "products"
+                        ).update({
+                            "stock_quantity": new_stock,
+                            "is_out_of_stock": (
+                                new_stock <= 0
+                            )
+                        }).eq(
+                            "id",
+                            comp_id
+                        ).execute()
 
                 else:
-                    qty_ordered = 1
-
-                    try:
-                        qty_str = order.get("variant_details", "Quantity: 1")
-
-                        for segment in qty_str.split("|"):
-                            if "Quantity:" in segment:
-                                qty_ordered = int(
-                                    segment.replace("Quantity:", "").strip()
-                                )
-                    except Exception:
-                        qty_ordered = 1
-
                     current_stock = int(
-                        parent_product.get("stock_quantity", 0)
+                        parent_product.get(
+                            "stock_quantity",
+                            0
+                        )
                     )
 
                     if current_stock < qty_ordered:
-                        shortage = qty_ordered - current_stock
-
-                        raise Exception(
-                            f"INSUFFICIENT_STOCK|Requested:{qty_ordered}|Available:{current_stock}|Shortage:{shortage}"
+                        shortage = (
+                            qty_ordered - current_stock
                         )
 
-                    new_stock = current_stock - qty_ordered
+                        raise Exception(
+                            "INSUFFICIENT_STOCK"
+                            f"|Requested:{qty_ordered}"
+                            f"|Available:{current_stock}"
+                            f"|Shortage:{shortage}"
+                        )
 
-                    supabase_client.table("products").update({
+                    new_stock = (
+                        current_stock - qty_ordered
+                    )
+
+                    supabase_client.table(
+                        "products"
+                    ).update({
                         "stock_quantity": new_stock,
-                        "is_out_of_stock": new_stock == 0
-                    }).eq("id", target_product_id).execute()
+                        "is_out_of_stock": (
+                            new_stock <= 0
+                        )
+                    }).eq(
+                        "id",
+                        target_product_id
+                    ).execute()
 
+            else:
+                current_stock = int(
+                    parent_product.get(
+                        "stock_quantity",
+                        0
+                    )
+                )
 
-        updated_order = OrderRepository.fulfill_order_status(order_id)
+                if current_stock < qty_ordered:
+                    shortage = (
+                        qty_ordered - current_stock
+                    )
+
+                    raise Exception(
+                        "INSUFFICIENT_STOCK"
+                        f"|Requested:{qty_ordered}"
+                        f"|Available:{current_stock}"
+                        f"|Shortage:{shortage}"
+                )
+
+                new_stock = (
+                    current_stock - qty_ordered
+                )
+
+                supabase_client.table(
+                    "products"
+                ).update({
+                    "stock_quantity": new_stock,
+                    "is_out_of_stock": (
+                        new_stock <= 0
+                    )
+                }).eq(
+                    "id",
+                    target_product_id
+                ).execute()
+
+            updated_order = (
+                OrderRepository.fulfill_order_status(
+                    order_id
+                )
+            )
+
+        else:
+            raise Exception(
+                "Order does not contain a valid product or package reference."
+            )
 
         AuditRepository.write_log(
             email=admin_email,
             action="FULFILL_ORDER",
-            details=f"Delivered order ID: {order_id}. Financial revenue registered under total sales profiles for '{target_product_name}'"
+            details=(
+                f"Delivered order ID: {order_id}. "
+                "Financial revenue registered under total "
+                f"sales profiles for '{target_product_name}'"
+            )
         )
 
         return updated_order
-
 
 class ReviewService:
     @staticmethod

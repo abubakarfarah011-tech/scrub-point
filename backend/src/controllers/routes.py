@@ -1,4 +1,5 @@
 import bcrypt
+import re
 from flask import request, make_response
 from flask_restful import Resource
 from src.views.schemas import AdminSchema, ReviewSchema
@@ -220,25 +221,26 @@ class OrderFulfillResource(Resource):
         except Exception as e:
             error = str(e)
 
-            if error.startswith("INSUFFICIENT_STOCK|"):
-                parts = {}
+            stock_match = re.search(
+                r"INSUFFICIENT_STOCK\|Requested:(\d+)\|Available:(\d+)\|Shortage:(\d+)",
+                error
+            )
 
-                for item in error.split("|")[1:]:
-                    key, value = item.split(":")
-                    parts[key] = int(value)
+            if stock_match:
+                requested, available, shortage = map(int, stock_match.groups())
 
                 return ApiResponse.error(
                     message="Insufficient stock available to fulfill this order.",
                     status_code=400,
                     errors={
-                        "requested": parts["Requested"],
-                        "available": parts["Available"],
-                        "shortage": parts["Shortage"]
+                        "requested": requested,
+                        "available": available,
+                        "shortage": shortage
                     }
                 )
 
             return ApiResponse.error(
-                message=error,
+                message="Unable to fulfill the order at this time.",
                 status_code=500
             )
 

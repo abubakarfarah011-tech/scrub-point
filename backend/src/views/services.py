@@ -300,40 +300,49 @@ class OrderService:
 
         if not order.get("quantity"):
             try:
-                qty_str = order.get("variant_details", "Quantity: 1")
+                qty_str = order.get(
+                    "variant_details",
+                    "Quantity: 1"
+                )
 
                 for segment in qty_str.split("|"):
                     if "Quantity:" in segment:
                         qty_ordered = int(
-                            segment.replace("Quantity:", "").strip()
+                            segment
+                            .replace("Quantity:", "")
+                            .strip()
                         )
                         break
+
             except (TypeError, ValueError):
                 qty_ordered = 1
 
         if target_package_id:
-
             supabase_client.rpc(
-            "fulfill_package_order_atomic",
-            {
-                "p_order_id": int(order_id)
-            }
-        ).execute()
+                "fulfill_package_order_atomic",
+                {
+                    "p_order_id": str(order_id)
+                }
+            ).execute()
 
-        pkg_record = (
-            supabase_client
-            .table("packages")
-            .select("name")
-            .eq("id", target_package_id)
-            .execute()
-        )
-
-        if pkg_record.data:
-            target_product_name = (
-                target_product_name
-                or pkg_record.data[0].get("name")
+            pkg_record = (
+                supabase_client
+                .table("packages")
+                .select("name")
+                .eq("id", target_package_id)
+                .execute()
             )
-            updated_order = OrderRepository.get_by_id(order_id)
+
+            if pkg_record.data:
+                target_product_name = (
+                    target_product_name
+                    or pkg_record.data[0].get("name")
+                )
+
+
+            updated_order = OrderRepository.get_by_id(
+                order_id
+            )
 
         elif target_product_id:
             prod_record = (
@@ -355,7 +364,10 @@ class OrderService:
                 parent_product.get("is_student_package")
                 and parent_product.get("description")
             ):
-                desc_text = parent_product.get("description", "")
+                desc_text = parent_product.get(
+                    "description",
+                    ""
+                )
 
                 if "[Bundle JSON:" in desc_text:
                     try:
@@ -363,18 +375,25 @@ class OrderService:
                             desc_text.find("[Bundle JSON:")
                             + len("[Bundle JSON:")
                         )
-                        end_idx = desc_text.find("]", start_idx)
+
+                        end_idx = desc_text.find(
+                            "]",
+                            start_idx
+                        )
 
                         json_str = desc_text[
                             start_idx:end_idx
                         ].strip()
 
-                        components_list = json.loads(json_str)
+                        components_list = json.loads(
+                            json_str
+                        )
 
                     except Exception:
                         raise Exception(
                             "Unable to read the student bundle component list."
                         )
+
 
                     for comp in components_list:
                         comp_id = comp.get("id")
@@ -384,7 +403,8 @@ class OrderService:
                         )
 
                         qty_needed = (
-                            per_bundle_qty * qty_ordered
+                            per_bundle_qty
+                            * qty_ordered
                         )
 
                         c_record = (
@@ -403,7 +423,7 @@ class OrderService:
                         available = int(
                             c_record.data[0].get(
                                 "stock_quantity",
-                               0
+                                0
                             )
                         )
 
@@ -415,6 +435,7 @@ class OrderService:
                                 f"|Shortage:{qty_needed - available}"
                             )
 
+
                     for comp in components_list:
                         comp_id = comp.get("id")
 
@@ -423,7 +444,8 @@ class OrderService:
                         )
 
                         qty_needed = (
-                            per_bundle_qty * qty_ordered
+                            per_bundle_qty
+                            * qty_ordered
                         )
 
                         c_record = (
@@ -442,7 +464,8 @@ class OrderService:
                         )
 
                         new_stock = (
-                            current_stock - qty_needed
+                            current_stock
+                            - qty_needed
                         )
 
                         supabase_client.table(
@@ -467,7 +490,8 @@ class OrderService:
 
                     if current_stock < qty_ordered:
                         shortage = (
-                            qty_ordered - current_stock
+                            qty_ordered
+                            - current_stock
                         )
 
                         raise Exception(
@@ -478,7 +502,8 @@ class OrderService:
                         )
 
                     new_stock = (
-                        current_stock - qty_ordered
+                        current_stock
+                        - qty_ordered
                     )
 
                     supabase_client.table(
@@ -503,7 +528,8 @@ class OrderService:
 
                 if current_stock < qty_ordered:
                     shortage = (
-                        qty_ordered - current_stock
+                        qty_ordered
+                        - current_stock
                     )
 
                     raise Exception(
@@ -511,10 +537,11 @@ class OrderService:
                         f"|Requested:{qty_ordered}"
                         f"|Available:{current_stock}"
                         f"|Shortage:{shortage}"
-                )
+                    )
 
                 new_stock = (
-                    current_stock - qty_ordered
+                    current_stock
+                    - qty_ordered
                 )
 
                 supabase_client.table(
@@ -530,9 +557,8 @@ class OrderService:
                 ).execute()
 
             updated_order = (
-                OrderRepository.fulfill_order_status(
-                    order_id
-                )
+                OrderRepository
+                .fulfill_order_status(order_id)
             )
 
         else:

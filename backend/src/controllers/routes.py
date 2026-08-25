@@ -1,5 +1,6 @@
 import bcrypt
 import re
+import logging
 from flask import request, make_response
 from flask_restful import Resource
 from src.views.schemas import AdminSchema, ReviewSchema
@@ -8,6 +9,8 @@ from src.views.responses import ApiResponse
 from src.controllers.utilities import token_required, SecurityUtils
 from src.models.database import supabase_client
 from src.extensions import limiter
+
+logger = logging.getLogger(__name__)
 
 class ProductListResource(Resource):
     def options(self):
@@ -238,6 +241,10 @@ class OrderFulfillResource(Resource):
                         "shortage": shortage
                     }
                 )
+            logger.exception(
+                "Order fulfillment failed for order %s",
+                order_id
+            )
 
             return ApiResponse.error(
                 message="Unable to fulfill the order at this time.",

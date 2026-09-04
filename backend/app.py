@@ -27,7 +27,15 @@ CORS(
 )
 
 api = Api(app)
-
+@app.before_request
+def debug_proxy_ip():
+    if request.path == "/health":
+        app.logger.warning(
+            "IP_DEBUG remote_addr=%s x_forwarded_for=%s",
+            request.remote_addr,
+            request.headers.get("X-Forwarded-For")
+        )
+        
 @app.after_request
 def apply_cors_fallback_headers(response):
     request_origin = request.headers.get("Origin")

@@ -149,18 +149,18 @@ useEffect(() => {
     const totalOrderPrice = displayPrice * purchaseQuantity;
 
     const compiledWhatsAppMessageString = encodeURIComponent(
-      `🛒 *NEW ORDER - SCRUB POINT KENYA*\n\n` +
-      `*Order Ref:* ${orderRef || 'N/A'}\n` +
-      `*Product:* ${product.name}\n` +
-      `${sizingDetailsTextLine}\n` +
-      `*Color:* ${selectedColor || 'Default'}\n` +
-      `*Quantity:* ${purchaseQuantity} Set(s)\n` +
-      `*Unit Price:* KES ${displayPrice.toLocaleString()}\n` +
-      `*Total Price:* KES ${totalOrderPrice.toLocaleString()}\n` +
-      `*Description:* ${product.description || 'N/A'}`
-    );
+  `*NEW ORDER - SCRUB POINT KENYA*\n\n` +
+  `*Order Ref:* ${orderRef || 'N/A'}\n` +
+  `*Product:* ${product.name}\n` +
+  `${sizingDetailsTextLine}\n` +
+  `*Color:* ${selectedColor || 'Default'}\n` +
+  `*Quantity:* ${purchaseQuantity} Set(s)\n` +
+  `*Unit Price:* KES ${displayPrice.toLocaleString()}\n` +
+  `*Total Price:* KES ${totalOrderPrice.toLocaleString()}\n` +
+  `*Description:* ${product.description || 'N/A'}`
+);
 
-    return `https://wa.me/${corporatePhoneNumber}?text=${compiledWhatsAppMessageString}`;
+   return `https://wa.me/${corporatePhoneNumber}?text=${compiledWhatsAppMessageString}`;
   };
 
   const handleWhatsAppOrder = async () => {
@@ -202,6 +202,7 @@ useEffect(() => {
         const orderPayload = {
           product_id: product.id,
           product_name: product.name,
+          quantity: purchaseQuantity,
           variant_details: variantDetails,
           total_price: effectiveTotalPrice,
         };
@@ -318,9 +319,12 @@ useEffect(() => {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs flex items-center justify-center min-h-75 sm:min-h-105 relative group overflow-hidden">
               {product.image_url ? (
                 <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="max-h-65 sm:max-h-90 object-contain rounded-2xl group-hover:scale-[1.02] transition-transform duration-300"
+                src={product.image_url}
+                alt={product.name}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+                className="max-h-65 sm:max-h-90 object-contain rounded-2xl group-hover:scale-[1.02] transition-transform duration-300"
                 />
               ) : (
                 <div className="text-center p-6 text-slate-300 space-y-2">
@@ -562,7 +566,13 @@ useEffect(() => {
                   <div className="space-y-2">
                     <div className="bg-slate-50 dark:bg-slate-800/50 h-28 rounded-xl overflow-hidden flex items-center justify-center p-2 relative">
                       {item.image_url ? (
-                        <img src={item.image_url} alt="" className="h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                      <img
+                      src={item.image_url}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                      />
                       ) : (
                         <Package className="h-6 w-6 text-slate-300" />
                       )}

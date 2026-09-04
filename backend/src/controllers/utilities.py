@@ -18,7 +18,7 @@ class SecurityUtils:
     @staticmethod
     def generate_token(admin_payload):
         payload = {
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24),
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12),
             "iat": datetime.datetime.utcnow(),
             "sub": str(admin_payload.get("id")),
             "email": str(admin_payload.get("email")),
@@ -51,14 +51,18 @@ def token_required(required_role=None):
                     "email": decoded_data.get("email"),
                     "role": decoded_data.get("role")
                 }
-
-                live_check = supabase_client.table("admins").select("id", "is_active").eq("id", current_admin.get("id")).execute()
+                live_check = (supabase_client.table("admins").select("id", "email", "role", "is_active").eq("id", current_admin.get("id")).execute())
 
                 if not live_check.data or len(live_check.data) == 0:
                     return ApiResponse.error(message="Account deleted or non-existent. Access revoked.", status_code=401)
 
+                live_admin = live_check.data[0]
+
                 if not live_check.data[0].get("is_active", True):
                     return ApiResponse.error(message="This administrative account profile has been inactivated by the Super Admin.", status_code=401)
+
+                current_admin["email"] = live_admin.get("email")
+                current_admin["role"] = live_admin.get("role")
 
                 if required_role and current_admin.get("role") != required_role:
                     return ApiResponse.error(message="Unauthorized resource privilege mismatch.", status_code=403)

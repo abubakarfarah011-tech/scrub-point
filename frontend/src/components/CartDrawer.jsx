@@ -13,6 +13,9 @@ export default function CartDrawer({ isOpen, onClose }) {
 
   const cartSubtotal = cart.reduce((total, item) => total + (Number(item.price || 0) * item.quantity), 0);
 
+  const computedTotalItemsSum = cart?.reduce((accum, item) => accum + parseInt(item.quantity || 1, 10), 0) || 0;
+  const computedTotalBillPrice = cart?.reduce((accum, item) => accum + (Number(item.price || 0) * parseInt(item.quantity || 1, 10)), 0) || 0;
+
   const handleSendGroupWhatsAppOrder = async () => {
     if (cart.length === 0 || checkoutLoading) return;
 
@@ -106,22 +109,39 @@ export default function CartDrawer({ isOpen, onClose }) {
 
       const myRealPhoneNumber = "254116643999";
 
-      let messageString = `Order Refs: ${collectedOrderRefs.join(', ') || 'N/A'}\n\n` +
-                            "Hi Scrub Point, I want to order the following multiple items from your store:\n\n" +
-                            "===============================\n";
+      let messageString =
+  `*NEW ORDER - SCRUB POINT KENYA*\n\n` +
+  `*Order Refs:* ${collectedOrderRefs.join(', ') || 'N/A'}\n` +
+  `*Items Ordered:* ${cart.length}\n\n`;
 
-      cart.forEach((item, index) => {
-        messageString += `${index + 1}. 📦 Item: ${item.name}\n` +
-                         `   🆔 ID: #${item.id} | 🔢 Qty: ${item.quantity}\n`;
-        if (item.size) messageString += `   📏 Size: ${item.size}\n`;
-        if (item.color) messageString += `   🎨 Color: ${item.color}\n`;
-        if (item.custom_measurements?.trim()) messageString += `   🪡 Custom Fit: ${item.custom_measurements.trim()}\n`;
-        messageString += `   💰 Sub-Price: KES ${(Number(item.price || 0) * item.quantity).toLocaleString()}\n` +
-                         "-------------------------------\n";
-      });
+cart.forEach((item, index) => {
+  const itemSubtotal = Number(item.price || 0) * Number(item.quantity || 1);
 
-      messageString += `\n💵 Combined Invoice Bill: KES ${cartSubtotal.toLocaleString()}\n\n` +
-                       "Please let me know how to proceed with payment and delivery details!";
+  messageString +=
+    `*${index + 1}. ${item.name}*\n` +
+    `*Quantity:* ${item.quantity}\n`;
+
+  if (item.size) {
+    messageString += `*Size:* ${item.size}\n`;
+  }
+
+  if (item.color) {
+    messageString += `*Color:* ${item.color}\n`;
+  }
+
+  if (item.custom_measurements?.trim()) {
+    messageString +=
+      `*Measurements:* ${item.custom_measurements.trim()}\n`;
+  }
+
+  messageString +=
+    `*Unit Price:* KES ${Number(item.price || 0).toLocaleString()}\n` +
+    `*Subtotal:* KES ${itemSubtotal.toLocaleString()}\n\n`;
+});
+
+messageString +=
+  `*ORDER TOTAL: KES ${computedTotalBillPrice.toLocaleString()}*\n\n` +
+  `Please confirm availability, payment and delivery details.`;
 
       const encodedMessage = encodeURIComponent(messageString);
       window.open("https://wa.me/" + myRealPhoneNumber + "?text=" + encodedMessage, '_blank');

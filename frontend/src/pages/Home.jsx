@@ -4,11 +4,12 @@ import { Link } from 'react-router-dom';
 import { ApiService } from '../services/api';
 import { useCart } from '../context/useCart';
 import {
-  Sparkles, ShieldCheck, Truck, MessageSquare, Award, RefreshCw,
+  Sparkles, ShieldCheck, Truck, MessageSquare, Award,
   ChevronRight, Star, ShoppingBag, ArrowUpRight, HeartHandshake,
   Layers, CheckCircle, Smartphone, Package, Clock, MessageCircle
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import SkeletonCard from '../components/SkeletonCard';
 
 const CORPORATE_PHONE_NUMBER = "254116643999";
 
@@ -28,15 +29,18 @@ function isPackageExpired(pkg) {
 }
 function buildPackageWhatsAppUrl(pkg, orderRef) {
   const message = encodeURIComponent(
-    `NEW BUNDLE ORDER - SCRUB POINT KENYA\n\n` +
-    `Order Ref: ${orderRef || 'N/A'}\n` +
-    `Package: ${pkg.name}\n` +
-    `Price: KES ${Number(pkg.price).toLocaleString()}\n` +
-    `Description: ${pkg.description || 'N/A'}\n\n` +
-    `Please let me know how to proceed with payment and delivery details!`
+    `*NEW PACKAGE ORDER - SCRUB POINT KENYA*\n\n` +
+    `*Order Ref:* ${orderRef || 'N/A'}\n` +
+    `*Package:* ${pkg.name}\n` +
+    `*Quantity:* 1\n` +
+    `*Total Price:* KES ${Number(pkg.price || 0).toLocaleString()}\n` +
+    `*Description:* ${pkg.description || 'N/A'}\n\n` +
+    `Please confirm availability, payment and delivery details.`
   );
+
   return `https://wa.me/${CORPORATE_PHONE_NUMBER}?text=${message}`;
 }
+
 
 export default function Home() {
   const { addToCart, cart } = useCart();
@@ -109,7 +113,7 @@ useEffect(() => {
 
   const intervalId = setInterval(() => {
     loadHomeData();
-  }, 600000);
+  }, 8000000);
 
   return () => {
     window.removeEventListener("focus", handleFocus);
@@ -181,15 +185,6 @@ useEffect(() => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#0B192C] flex flex-col items-center justify-center space-y-2 text-xs font-black uppercase text-slate-400 tracking-widest animate-pulse">
-        <RefreshCw className="h-6 w-6 animate-spin text-[#1E3A8A]" />
-        <span>Syncing Our Products Page...</span>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full flex flex-col justify-between transition-colors duration-200">
       <div className="grow">
@@ -199,6 +194,9 @@ useEffect(() => {
           <img
           src={HERO_BANNER_IMAGE_URL}
           alt="Scrub Point — medical scrubs, stethoscopes, textbooks, and mobility equipment"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover"
           />
 
@@ -284,13 +282,24 @@ useEffect(() => {
               }
             `}</style>
 
-            <div className="animate-marquee-track px-4">
-              {featuredListings.concat(featuredListings).map((item, idx) => (
-                <div key={`marquee-item-${idx}`} className="w-50 shrink-0 transform hover:scale-102 transition-transform shadow-xs bg-white dark:bg-slate-900 rounded-2xl p-2 border dark:border-slate-800">
-                  <ProductCard item={item} />
-                </div>
-              ))}
-            </div>
+            {loading ? (
+              <div className="w-full max-w-7xl mx-auto px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <SkeletonCard key={`home-skeleton-${index}`} />
+                  ))}
+                  </div>
+                  ) : (
+                  <div className="animate-marquee-track px-4">
+                    {featuredListings.concat(featuredListings).map((item, idx) => (
+                      <div
+                      key={`marquee-item-${idx}`}
+                      className="w-50 shrink-0 transform hover:scale-102 transition-transform shadow-xs bg-white dark:bg-slate-900 rounded-2xl p-2 border dark:border-slate-800"
+                      >
+                        <ProductCard item={item} />
+                        </div>
+                      ))}
+                      </div>
+                    )}
           </div>
         </section>
 
@@ -315,7 +324,13 @@ useEffect(() => {
                     <div className="space-y-2">
                       <div className="h-28 bg-slate-50 dark:bg-slate-800 rounded-xl border overflow-hidden flex items-center justify-center">
                         {pkg.image_url ? (
-                          <img src={pkg.image_url} alt={pkg.name} className="h-full w-full object-contain" />
+                          <img
+                          src={pkg.image_url}
+                          alt={pkg.name}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-contain"
+                          />
                         ) : (
                           <Package className="h-8 w-8 text-slate-300" />
                         )}

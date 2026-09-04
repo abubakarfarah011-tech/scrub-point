@@ -2,21 +2,22 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet }
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { CartProvider } from './context/CartContext';
-import { useEffect, useState } from 'react';
 
-import Home from './pages/Home';
-import Products from './pages/Products';
-import ProductDetail from './pages/ProductDetail';
-import About from './pages/About';
-import Contact from './pages/Contact';
+import { lazy, Suspense, useEffect, useState } from 'react';
+
 import Footer from './components/Footer';
-
-import AdminLogin from './admin/AdminLogin';
-import AdminDashboard from './admin/AdminDashboard';
-import InventoryManager from './admin/InventoryManager';
-import DashboardAnalytics from './admin/DashboardAnalytics';
-
 import Navbar from './components/Navbar';
+
+const Home = lazy(() => import('./pages/Home'));
+const Products = lazy(() => import('./pages/Products'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+
+const AdminLogin = lazy(() => import('./admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./admin/AdminDashboard'));
+const InventoryManager = lazy(() => import('./admin/InventoryManager'));
+const DashboardAnalytics = lazy(() => import('./admin/DashboardAnalytics'));
 
 function PublicLayoutFrame({ isDarkMode, onThemeToggle }) {
   return (
@@ -143,36 +144,104 @@ export default function App() {
         <Router>
           <ScrollToTopFallback />
 
-          <Routes>
-            <Route
-              element={
-                <PublicLayoutFrame
+          <Suspense
+          fallback={
+          <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0B192C]">
+            <div className="text-center space-y-3">
+              <div className="h-8 w-8 mx-auto rounded-full border-4 border-slate-200 border-t-[#1E3A8A] animate-spin" />
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                Loading Scrub Point...
+                </p>
+                </div>
+                </div>
+              }
+              >
+                <Routes>
+                   <Route
+                   element={
+                   <PublicLayoutFrame
+                   isDarkMode={isDarkModeActive}
+                   onThemeToggle={toggleGlobalApplicationTheme}
+                   />
+                  }
+                  >
+                    <Route
+                    path="/"
+                    element={
+                    <Home
+                    isDarkMode={isDarkModeActive}
+                    onThemeToggle={toggleGlobalApplicationTheme}
+                    />
+                  }
+                  />
+                  <Route
+                  path="/products"
+                  element={
+                  <Products
                   isDarkMode={isDarkModeActive}
-                  onThemeToggle={toggleGlobalApplicationTheme}
+                  />
+                }
+                />
+
+                <Route
+                path="/products/:id"
+                element={
+                <ProductDetail
+                isDarkMode={isDarkModeActive}
                 />
               }
-            >
-              <Route path="/" element={<Home isDarkMode={isDarkModeActive} onThemeToggle={toggleGlobalApplicationTheme} />} />
-              <Route path="/products" element={<Products isDarkMode={isDarkModeActive} />} />
-              <Route path="/products/:id" element={<ProductDetail isDarkMode={isDarkModeActive} />} />
-              <Route path="/about" element={<About isDarkMode={isDarkModeActive} />} />
-              <Route path="/contact" element={<Contact isDarkMode={isDarkModeActive} />} />
-            </Route>
-            <Route path="/admin" element={<AdminLogin />} />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<DashboardAnalytics />} />
-              <Route path="inventory" element={<InventoryManager />} />
-            </Route>
+              />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Route
+              path="/about"
+              element={
+              <About
+              isDarkMode={isDarkModeActive}
+              />
+            }
+            />
+
+            <Route
+            path="/contact"
+            element={
+            <Contact
+            isDarkMode={isDarkModeActive}
+            />
+          }
+          />
+          </Route>
+
+          <Route
+          path="/admin"
+          element={<AdminLogin />}
+          />
+
+          <Route
+          path="/admin/dashboard"
+          element={
+          <ProtectedRoute>
+            <AdminDashboard />
+            </ProtectedRoute>
+            }
+            >
+
+              <Route
+              index
+              element={<DashboardAnalytics />}
+              />
+
+              <Route
+              path="inventory"
+              element={<InventoryManager />}
+              />
+              </Route>
+
+              <Route
+              path="*"
+              element={<Navigate to="/" replace />}
+              />
+              </Routes>
+              </Suspense>
 
         </Router>
       </CartProvider>

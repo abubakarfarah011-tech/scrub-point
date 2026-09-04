@@ -146,7 +146,15 @@ class AdminImageUploadResource(Resource):
                 image = Image.open(
                     __import__("io").BytesIO(raw_binary_stream)
                 )
+                max_image_pixels = 25_000_000
 
+                width, height = image.size
+
+                if width < 1 or height < 1 or (width * height) > max_image_pixels:
+                    return {
+                        "success": False,
+                        "message": "Image dimensions exceed the safety limit."
+                        }, 400
                 detected_format = (
                     image.format or ""
                 ).upper()
@@ -168,7 +176,7 @@ class AdminImageUploadResource(Resource):
 
                 image.verify()
 
-            except (UnidentifiedImageError, OSError, ValueError):
+            except (UnidentifiedImageError,OSError,ValueError,Image.DecompressionBombError):
                 return {
                     "success": False,
                     "message": (

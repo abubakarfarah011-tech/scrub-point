@@ -6,6 +6,7 @@ import {
   ChevronRight, Tag, Percent, GraduationCap, Grid, Package, Sparkles, Search
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import SkeletonCard from '../components/SkeletonCard';
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -186,13 +187,13 @@ export default function Products() {
                 </select>
               </div>
             </div>
-
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-24 space-y-3">
-                <RefreshCw className="h-8 w-8 text-slate-400 animate-spin" />
-                <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Sifting live product matrices...</p>
-              </div>
-            ) : error ? (
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <SkeletonCard key={`product-skeleton-${index}`} />
+                    ))}
+                    </div>
+                    ) : error ? (
               <div className="bg-red-50 dark:bg-red-950/20 border-l-4 border-red-500 p-4 rounded-r-xl text-xs text-red-700 dark:text-red-400 font-bold flex items-center space-x-2">
                 <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
                 <span>{error}</span>

@@ -47,6 +47,13 @@ def apply_cors_fallback_headers(response):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Content-Security-Policy"] = (
+    "default-src 'none'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'none'; "
+    "form-action 'none'"
+    )
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     return response
 
 from src.controllers.routes import (

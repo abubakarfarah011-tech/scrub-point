@@ -210,7 +210,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
                     analytics.charts.units_sold_breakdown.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 border rounded-xl text-xs font-semibold">
                         <span className="text-slate-700 uppercase truncate max-w-50">{item.product_name}</span>
-                        <span className="bg-medical-50 text-medical-600 border border-medical-100 px-3 py-1 rounded-lg font-black shrink-0">{item.quantity_sold} scrubs sold</span>
+                        <span className="bg-medical-50 text-medical-600 border border-medical-100 px-3 py-1 rounded-lg font-black shrink-0">{item.quantity_sold} sold</span>
                       </div>
                     ))
                   )}

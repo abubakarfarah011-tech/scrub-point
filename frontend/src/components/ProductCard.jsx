@@ -15,7 +15,13 @@ export default function ProductCard({ item }) {
 
       <Link to={`/products/${item.id}`} className="bg-slate-100 aspect-square w-full relative overflow-hidden shrink-0 flex items-center justify-center cursor-pointer">
         {item.image_url ? (
-          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500" />
+          <img
+          src={item.image_url}
+          alt={item.name}
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-xs uppercase tracking-widest bg-slate-200">
             Scrub Point Photo

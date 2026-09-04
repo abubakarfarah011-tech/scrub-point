@@ -15,9 +15,39 @@ class WalkInOrderResource(Resource):
     def post(self, current_admin, *args, **kwargs):
         try:
             request_payload = request.get_json() or {}
-            customer_name = request_payload.get('customer_name', '').strip()
-            customer_phone = request_payload.get('customer_phone', '').strip()
-            cart_items = request_payload.get('items', [])
+            customer_name = request_payload.get("customer_name", "")
+            customer_phone = request_payload.get("customer_phone", "")
+            cart_items = request_payload.get("items", [])
+
+            if not isinstance(customer_name, str):
+                 return {
+                      "success": False,
+                      "message": "Customer name must be text."
+                      }, 400
+            if not isinstance(customer_phone, str):
+                 return {
+                      "success": False,
+                      "message": "Customer phone must be text."
+                      }, 400
+
+            customer_name = customer_name.strip()
+            customer_phone = customer_phone.strip()
+
+            if not customer_name or len(customer_name) > 100:
+                return {
+                    "success": False,
+                    "message": "Customer name must be between 1 and 100 characters."
+                    }, 400
+            if not customer_phone or len(customer_phone) > 30:
+                return {
+                    "success": False,
+                    "message": "Customer phone must be between 1 and 30 characters."
+                    }, 400
+            if not isinstance(cart_items, list):
+                 return {
+                      "success": False,
+                      "message": "Items must be provided as a list."
+                      }, 400
 
             if not cart_items:
                 return {"success": False, "message": "Your walk-in invoice trolley list is completely empty."}, 400
@@ -26,8 +56,38 @@ class WalkInOrderResource(Resource):
             computed_total_price = 0.0
 
             for item in cart_items:
-                p_id = item.get('product_id')
-                requested_qty = int(item.get('quantity', 1))
+                if not isinstance(item, dict):
+                    return {
+                        "success": False,
+                        "message": "Each item must be a valid object."
+                        }, 400
+                p_id = item.get("product_id")
+
+                if isinstance(p_id, bool) or not isinstance(p_id, int) or p_id < 1:
+                    return {
+                        "success": False,
+                        "message": "Product ID must be a valid positive integer."
+                        }, 400
+
+                raw_quantity = item.get("quantity", 1)
+                if isinstance(raw_quantity, bool):
+                       return {
+                              "success": False,
+                              "message": "Item quantity must be a valid whole number."
+                              }, 400
+                try:
+                       requested_qty = int(raw_quantity)
+                except (TypeError, ValueError):
+                    return {
+                        "success": False,
+                        "message": "Item quantity must be a valid whole number."
+                        }, 400
+
+                if requested_qty < 1 or requested_qty > 100:
+                    return {
+                        "success": False,
+                        "message": "Item quantity must be between 1 and 100."
+                        }, 400
 
                 product_res = supabase_client.table("products").select("*").eq("id", p_id).execute()
                 if not product_res.data:
@@ -57,14 +117,14 @@ class WalkInOrderResource(Resource):
                     "color": item.get('color')
                 })
 
-            for item in cart_items:
-                p_id = item.get('product_id')
-                requested_qty = int(item.get('quantity', 1))
-
+            for item in enriched_sale_items:
                 supabase_client.rpc(
                     "decrement_stock",
-                    {"row_id": p_id, "qty_to_subtract": requested_qty}
-                ).execute()
+                    {
+                        "row_id": item["product_id"],
+                        "qty_to_subtract": item["quantity"]
+                        }
+                        ).execute()
 
             sale_record = supabase_client.table("walk_in_orders").insert({
                 "customer_name": customer_name,

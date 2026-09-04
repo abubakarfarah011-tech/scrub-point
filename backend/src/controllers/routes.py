@@ -160,10 +160,26 @@ class AdminLoginResource(Resource):
     @limiter.limit("5 per minute")
     def post(self):
         json_data = request.get_json() or {}
+
+        if not isinstance(json_data, dict):
+            return ApiResponse.error(
+                message="Invalid login request.",
+                status_code=400
+                )
+
+        errors, cleaned_data = AdminSchema.validate_login(json_data)
+
+        if errors:
+            return ApiResponse.error(
+                message="Invalid credentials.",
+                status_code=401
+                )
+
         admin = AuthService.authenticate_admin(
-            json_data.get("email"),
-            json_data.get("password")
-        )
+            cleaned_data["email"],
+            cleaned_data["password"]
+            )
+
 
         if not admin:
             return ApiResponse.error(

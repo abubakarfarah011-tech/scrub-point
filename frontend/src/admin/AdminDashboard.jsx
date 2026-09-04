@@ -5,7 +5,7 @@ import { useCart } from '../context/useCart';
 import {
   Grid,ShieldCheck, LayoutDashboard, BarChart3, Package, MessageSquare,
   Users, LogOut, RefreshCw, AlertTriangle, UserCheck, Star, ClipboardList,
-  Trash2, PlusCircle, Eye, EyeOff, DollarSign, Target, TrendingUp, CheckCircle, ShieldAlert,ShoppingCart
+  Trash2, PlusCircle, Eye, EyeOff, DollarSign, Target, TrendingUp, CheckCircle, ShieldAlert,ShoppingCart,Search, Download
 } from 'lucide-react';
 import InventoryManager from './InventoryManager';
 import InStorePOS from './InStorePOS';
@@ -36,6 +36,8 @@ export default function AdminDashboard() {
   const [deliveryHistoryOpen, setDeliveryHistoryOpen] = useState(false);
   const [historyStartDate, setHistoryStartDate] = useState('');
   const [historyEndDate, setHistoryEndDate] = useState('');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [activeOrderStatusFilter, setActiveOrderStatusFilter] = useState('all');
   const [fulfillErrorByOrderId, setFulfillErrorByOrderId] = useState({});
 
   const [loading, setLoading] = useState(true);
@@ -51,9 +53,12 @@ export default function AdminDashboard() {
   const [showPassword, setShowPassword] = useState(false);
   const [staffFormMsg, setStaffFormMsg] = useState('');
 
-  const loadDashboardCorePayload = useCallback(async () => {
-    if (!admin || !admin.token) return;
+  const loadDashboardCorePayload = useCallback(async (silent = false) => {
+  if (!admin || !admin.token) return;
+
+  if (!silent) {
     setIsRefreshing(true);
+  }
     const requestHeaders = {
       "Authorization": `Bearer ${admin.token}`,
       "Content-Type": "application/json"
@@ -101,12 +106,32 @@ export default function AdminDashboard() {
       console.error("Dashboard core loop sync failure exception.");
     } finally {
       setLoading(false);
-      setIsRefreshing(false);
+
+      if (!silent) {
+        setIsRefreshing(false);
+      }
     }
   }, [admin, analyticsStartDate, analyticsEndDate]);
 
-  useEffect(() => {
-  loadDashboardCorePayload();
+ useEffect(() => {
+  loadDashboardCorePayload(false);
+
+  const handleDashboardFocus = () => {
+    loadDashboardCorePayload(true);
+  };
+
+  const intervalId = window.setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      loadDashboardCorePayload(true);
+    }
+  }, 30000);
+
+  window.addEventListener('focus', handleDashboardFocus);
+
+  return () => {
+    window.clearInterval(intervalId);
+    window.removeEventListener('focus', handleDashboardFocus);
+  };
 }, [loadDashboardCorePayload]);
 
   const handleLogout = () => {
@@ -219,6 +244,143 @@ const getRemainingStockForOrder = (order) => {
   if (order.package_id) return null;
   const match = allProductsRawList.find(p => String(p.id) === String(order.product_id));
   return match ? int(match.stock_quantity) : null;
+};
+
+  const normalizedOrderSearch = orderSearchQuery.trim().toLowerCase();
+
+const orderMatchesSearch = (order) => {
+  if (!normalizedOrderSearch) return true;
+
+  const searchableFields = [
+    order.order_ref,
+    order.id,
+    order.product_name,
+    order.variant_details,
+    order.order_status
+  ];
+
+  return searchableFields.some((value) =>
+    String(value ?? '')
+      .toLowerCase()
+      .includes(normalizedOrderSearch)
+  );
+};
+
+const filteredActiveOrders = orders
+  .filter(
+    (order) =>
+      order.order_status === 'Awaiting WhatsApp' ||
+      order.order_status === 'Pending'
+  )
+  .filter(orderMatchesSearch)
+  .filter((order) => {
+    if (activeOrderStatusFilter === 'all') {
+      return true;
+    }
+
+    return order.order_status === activeOrderStatusFilter;
+  });
+
+const filteredDeliveredOrders = orders
+  .filter((order) => order.order_status === 'Delivered')
+  .filter(orderMatchesSearch)
+  .filter((order) => {
+    if (!historyStartDate && !historyEndDate) {
+      return true;
+    }
+
+    if (!order.delivered_at) {
+      return false;
+    }
+
+    const deliveredDate = order.delivered_at.slice(0, 10);
+
+    if (
+      historyStartDate &&
+      deliveredDate < historyStartDate
+    ) {
+      return false;
+    }
+
+    if (
+      historyEndDate &&
+      deliveredDate > historyEndDate
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+
+const escapeCsvCell = (value) => {
+  let text = String(value ?? '');
+
+  // Prevent spreadsheet formula execution from user-controlled values.
+  if (/^[=+\-@]/.test(text)) {
+    text = `'${text}`;
+  }
+
+  return `"${text.replace(/"/g, '""')}"`;
+};
+
+const handleExportOrdersCSV = () => {
+  const rows = [
+    [
+      'Order Ref',
+      'Order ID',
+      'Item',
+      'Type',
+      'Quantity',
+      'Details',
+      'Price (KES)',
+      'Status',
+      'Received',
+      'Delivered'
+    ],
+
+    ...orders.map((order) => [
+      order.order_ref || '',
+      order.id || '',
+      order.product_name || '',
+      order.package_id ? 'Package' : 'Product',
+      order.quantity || 1,
+      order.variant_details || '',
+      order.total_price || 0,
+      order.order_status || '',
+      order.created_at || '',
+      order.delivered_at || ''
+    ])
+  ];
+
+  const csvContent =
+    '\uFEFF' +
+    rows
+      .map((row) =>
+        row.map(escapeCsvCell).join(',')
+      )
+      .join('\n');
+
+  const blob = new Blob(
+    [csvContent],
+    {
+      type: 'text/csv;charset=utf-8;'
+    }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download =
+    `scrubpoint-orders-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
 };
 
   const handleApproveReview = async (reviewId) => {
@@ -381,7 +543,7 @@ const getRemainingStockForOrder = (order) => {
 
           <button
             type="button"
-            onClick={loadDashboardCorePayload}
+            onClick={() => loadDashboardCorePayload(false)}
             disabled={isRefreshing}
             className="flex items-center space-x-1.5 px-3 py-1.5 border rounded-xl bg-slate-50 hover:bg-slate-100 text-xs text-slate-600 font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer focus:outline-none shadow-sm"
           >
@@ -547,7 +709,7 @@ const getRemainingStockForOrder = (order) => {
                       analyticsData.charts.units_sold_breakdown.map((item, idx) => (
                         <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 border rounded-xl text-xs font-semibold shadow-xs">
                           <span className="text-slate-700 uppercase truncate max-w-50">{item.product_name}</span>
-                          <span className="bg-medical-50 text-medical-600 border px-3 py-1 rounded-lg font-black shrink-0">{item.quantity_sold} scrubs sold</span>
+                        <span className="bg-medical-50 text-medical-600 border px-3 py-1 rounded-lg font-black shrink-0">{item.quantity_sold} sold</span>
                         </div>
                       ))
                     )}
@@ -593,13 +755,64 @@ const getRemainingStockForOrder = (order) => {
             <MessageSquare className="h-4 w-4 text-amber-500 mr-1.5" />
             <span>Active WhatsApp Orders Queue</span>
           </h3>
+          <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+  <div className="relative flex-1 max-w-xl">
+    <Search
+      className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+    />
 
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-            {
-              orders.filter(o =>o.order_status === "Awaiting WhatsApp" ||o.order_status === "Pending"
-              ).length
-            } pending order(s)
-          </p>
+    <input
+      type="text"
+      value={orderSearchQuery}
+      onChange={(e) =>
+        setOrderSearchQuery(e.target.value)
+      }
+      placeholder="Search order ref, item name, details or ID..."
+      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:border-medical-500"
+    />
+  </div>
+
+  <div className="flex flex-wrap gap-2">
+    <select
+      value={activeOrderStatusFilter}
+      onChange={(e) =>
+        setActiveOrderStatusFilter(e.target.value)
+      }
+      className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-wider text-slate-600 focus:outline-none focus:border-medical-500 cursor-pointer"
+    >
+      <option value="all">
+        All Active Orders
+      </option>
+
+      <option value="Awaiting WhatsApp">
+        Awaiting WhatsApp
+      </option>
+
+      <option value="Pending">
+        Confirmed / Pending
+      </option>
+    </select>
+
+    <button
+      type="button"
+      onClick={handleExportOrdersCSV}
+      disabled={orders.length === 0}
+      className="bg-slate-800 hover:bg-slate-900 disabled:bg-slate-300 text-white border px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+    >
+      <Download className="h-3.5 w-3.5" />
+      <span>Export CSV</span>
+    </button>
+  </div>
+  </div>
+       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+        {filteredActiveOrders.length} shown / {
+        orders.filter(
+          (order) =>
+            order.order_status === "Awaiting WhatsApp" ||
+          order.order_status === "Pending"
+        ).length
+        } active order(s)
+        </p>
         </div>
       </div>
 
@@ -618,130 +831,108 @@ const getRemainingStockForOrder = (order) => {
           </thead>
 
           <tbody className="divide-y divide-slate-100 uppercase text-[11px]">
+  {filteredActiveOrders.length === 0 ? (
+    <tr>
+      <td
+        colSpan="6"
+        className="p-8 text-center text-slate-400 font-bold tracking-wide italic"
+      >
+        No orders match your current search or status filter.
+      </td>
+    </tr>
+  ) : (
+    filteredActiveOrders.map((order) => {
+      const remainingStock = getRemainingStockForOrder(order);
+      const fulfillError = fulfillErrorByOrderId[order.id];
 
-            {orders.filter(o =>o.order_status === "Awaiting WhatsApp" ||o.order_status === "Pending").length === 0 ? (
+      return (
+        <tr
+          key={order.id}
+          className="hover:bg-slate-50/60 transition-colors align-top"
+        >
+          <td className="p-3.5 font-bold text-slate-700 truncate max-w-45">
+            {order.product_name}
 
-              <tr>
-                <td
-                  colSpan="6"
-                  className="p-8 text-center text-slate-400 font-bold tracking-wide italic"
-                >
-                  No active orders right now.
-                </td>
-              </tr>
-
-            ) : (
-
-              orders
-                .filter(o =>o.order_status === "Awaiting WhatsApp" ||o.order_status === "Pending"
-                )
-                .map(order => {
-
-                  const remainingStock = getRemainingStockForOrder(order);
-                  const fulfillError = fulfillErrorByOrderId[order.id];
-
-                  return (
-                    <tr
-                      key={order.id}
-                      className="hover:bg-slate-50/60 transition-colors align-top"
-                    >
-
-                      <td className="p-3.5 font-bold text-slate-700 truncate max-w-45">
-                        {order.product_name}
-
-                        {order.package_id && (
-                          <span className="block text-[8px] text-purple-500 normal-case">
-                            Bundle Package
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="p-3.5 text-slate-400 font-medium normal-case font-mono">
-                        {order.variant_details}
-                      </td>
-
-                      <td className="p-3.5 font-black text-slate-800">
-                        KES {Number(order.total_price || 0).toLocaleString()}
-                      </td>
-
-                      <td className="p-3.5 text-slate-400 font-mono text-[10px] normal-case">
-                        {order.created_at
-                          ? new Date(order.created_at).toLocaleString('en-KE')
-                          : '—'}
-                      </td>
-
-                      <td className="p-3.5">
-                        {remainingStock !== null ? (
-                          <span
-                            className={`px-2 py-0.5 rounded font-black text-[9px] ${
-                              remainingStock <= 5
-                                ? 'bg-amber-50 text-amber-600'
-                                : 'bg-emerald-50 text-emerald-600'
-                            }`}
-                          >
-                            {remainingStock} left
-                          </span>
-                        ) : (
-                          <span className="text-slate-300 normal-case">
-                            —
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="p-3.5 text-center space-y-1.5">
-
-                        {order.order_status === "Awaiting WhatsApp" ? (
-
-                          <div className="flex items-center justify-center gap-2">
-
-                            <button
-                              type="button"
-                              onClick={() => handleConfirmOrder(order.id)}
-                              disabled={isRefreshing}
-                              className="bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-wide px-3 py-1.5 rounded-lg shadow-xs cursor-pointer focus:outline-none transition-colors disabled:bg-slate-300"
-                            >
-                              Confirm
-                            </button>
-
-                            {/* CANCEL */}
-                            <button
-                              type="button"
-                              onClick={() => handleCancelOrder(order.id)}
-                              disabled={isRefreshing}
-                              className="bg-red-500 hover:bg-red-600 text-white font-black uppercase text-[10px] tracking-wide px-3 py-1.5 rounded-lg shadow-xs cursor-pointer focus:outline-none transition-colors disabled:bg-slate-300"
-                            >
-                              Cancel
-                            </button>
-
-                          </div>
-
-                        ) : order.order_status === "Pending" ? (
-
-                          <button
-                            type="button"
-                            onClick={() => handleFulfillOrder(order.id)}
-                            disabled={isRefreshing}
-                            className="bg-medical-500 hover:bg-medical-600 text-white font-black uppercase text-[10px] tracking-wide px-3 py-1.5 rounded-lg shadow-xs cursor-pointer focus:outline-none transition-colors disabled:bg-slate-300"
-                          >
-                            Mark Delivered
-                          </button>
-
-                        ) : null}
-
-                        {fulfillError && (
-                          <div className="bg-red-50 border border-red-200 text-red-600 text-[9px] font-bold normal-case p-1.5 rounded max-w-45 mx-auto">
-                            {fulfillError}
-                          </div>
-                        )}
-
-                      </td>
-
-                    </tr>
-                  );
-                })
+            {order.package_id && (
+              <span className="block text-[8px] text-purple-500 normal-case">
+                Bundle Package
+              </span>
             )}
+          </td>
 
-          </tbody>
+          <td className="p-3.5 text-slate-400 font-medium normal-case font-mono">
+            {order.variant_details}
+          </td>
+
+          <td className="p-3.5 font-black text-slate-800">
+            KES {Number(order.total_price || 0).toLocaleString()}
+          </td>
+
+          <td className="p-3.5 text-slate-400 font-mono text-[10px] normal-case">
+            {order.created_at
+              ? new Date(order.created_at).toLocaleString('en-KE')
+              : '—'}
+          </td>
+
+          <td className="p-3.5">
+            {remainingStock !== null ? (
+              <span
+                className={`px-2 py-0.5 rounded font-black text-[9px] ${
+                  remainingStock <= 5
+                    ? 'bg-amber-50 text-amber-600'
+                    : 'bg-emerald-50 text-emerald-600'
+                }`}
+              >
+                {remainingStock} left
+              </span>
+            ) : (
+              <span className="text-slate-300 normal-case">—</span>
+            )}
+          </td>
+
+          <td className="p-3.5 text-center space-y-1.5">
+            {order.order_status === "Awaiting WhatsApp" ? (
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleConfirmOrder(order.id)}
+                  disabled={isRefreshing}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-wide px-3 py-1.5 rounded-lg shadow-xs cursor-pointer focus:outline-none transition-colors disabled:bg-slate-300"
+                >
+                  Confirm
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleCancelOrder(order.id)}
+                  disabled={isRefreshing}
+                  className="bg-red-500 hover:bg-red-600 text-white font-black uppercase text-[10px] tracking-wide px-3 py-1.5 rounded-lg shadow-xs cursor-pointer focus:outline-none transition-colors disabled:bg-slate-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : order.order_status === "Pending" ? (
+              <button
+                type="button"
+                onClick={() => handleFulfillOrder(order.id)}
+                disabled={isRefreshing}
+                className="bg-medical-500 hover:bg-medical-600 text-white font-black uppercase text-[10px] tracking-wide px-3 py-1.5 rounded-lg shadow-xs cursor-pointer focus:outline-none transition-colors disabled:bg-slate-300"
+              >
+                Mark Delivered
+              </button>
+            ) : null}
+
+            {fulfillError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-[9px] font-bold normal-case p-1.5 rounded max-w-45 mx-auto">
+                {fulfillError}
+              </div>
+            )}
+          </td>
+        </tr>
+      );
+    })
+  )}
+</tbody>
         </table>
       </div>
     </div>
@@ -781,17 +972,7 @@ const getRemainingStockForOrder = (order) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 uppercase text-[11px]">
-                {orders
-                  .filter(o => o.order_status === "Delivered")
-                  .filter(o => {
-                    if (!historyStartDate && !historyEndDate) return true;
-                    if (!o.delivered_at) return false;
-                    const deliveredDate = o.delivered_at.slice(0, 10);
-                    if (historyStartDate && deliveredDate < historyStartDate) return false;
-                    if (historyEndDate && deliveredDate > historyEndDate) return false;
-                    return true;
-                  })
-                  .map(order => (
+                {filteredDeliveredOrders.map(order => (
                     <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="p-3.5 font-bold text-slate-700 truncate max-w-45">{order.product_name}</td>
                       <td className="p-3.5 text-slate-400 font-medium normal-case font-mono">{order.variant_details}</td>

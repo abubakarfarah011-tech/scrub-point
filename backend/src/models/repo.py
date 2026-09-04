@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from src.models.database import supabase_client
+from flask import has_request_context
+from src.client_ip import get_client_ip
 import logging
 
 logger = logging.getLogger(__name__)
@@ -200,13 +202,18 @@ class ReviewRepository:
 
 class AuditRepository:
     @staticmethod
-    def write_log(email, action, details):
+    def write_log(email, action, details, source_ip=None):
+        if source_ip is None and has_request_context():
+            source_ip = get_client_ip()
+
         payload = {
             "admin_email": email,
             "action_type": action,
-            "details": details
+            "details": details,
+            "source_ip": source_ip
         }
+
         try:
             supabase_client.table("audit_logs").insert(payload).execute()
-        except Exception as e:
-         logger.exception("Audit log write failed.")
+        except Exception:
+            logger.exception("Audit log write failed.")

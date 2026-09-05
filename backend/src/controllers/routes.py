@@ -8,6 +8,7 @@ from src.views.services import ProductService, AuthService, OrderService, Review
 from src.views.responses import ApiResponse
 from src.controllers.utilities import token_required, SecurityUtils
 from src.models.database import supabase_client
+from src.models.repo import AuditRepository
 from src.extensions import limiter
 
 logger = logging.getLogger(__name__)
@@ -165,23 +166,34 @@ class AdminLoginResource(Resource):
             return ApiResponse.error(
                 message="Invalid login request.",
                 status_code=400
-                )
+            )
 
         errors, cleaned_data = AdminSchema.validate_login(json_data)
 
         if errors:
+            AuditRepository.write_log(
+                cleaned_data.get("email") or "unknown",
+                "ADMIN_LOGIN_FAILED",
+                "Login rejected during credential validation."
+            )
+
             return ApiResponse.error(
                 message="Invalid credentials.",
                 status_code=401
-                )
+            )
 
         admin = AuthService.authenticate_admin(
             cleaned_data["email"],
             cleaned_data["password"]
-            )
-
+        )
 
         if not admin:
+            AuditRepository.write_log(
+                cleaned_data["email"],
+                "ADMIN_LOGIN_FAILED",
+                "Invalid admin credentials."
+            )
+
             return ApiResponse.error(
                 message="Invalid credentials.",
                 status_code=401

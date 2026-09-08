@@ -20,41 +20,48 @@ CORS(
     app,
     resources={
         r"/api/*": {
-            "origins": FRONTEND_ORIGINS
+            "origins": FRONTEND_ORIGINS,
         }
     },
-    supports_credentials=True
+    supports_credentials=True,
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+    ],
+    methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+    ],
+    always_send=False,
 )
 
 api = Api(app)
 
+
 @app.after_request
-def apply_cors_fallback_headers(response):
-    request_origin = request.headers.get("Origin")
-
-    if request_origin in FRONTEND_ORIGINS:
-        response.headers["Access-Control-Allow-Origin"] = request_origin
-        response.headers["Vary"] = "Origin"
-
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Headers"] = (
-        "Content-Type, Authorization, Access-Control-Allow-Origin, X-Requested-With"
-    )
-    response.headers["Access-Control-Allow-Methods"] = (
-        "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-    )
+def apply_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
-    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Strict-Transport-Security"] = (
+        "max-age=63072000; includeSubDomains"
+    )
+    response.headers["Permissions-Policy"] = (
+        "camera=(), microphone=(), geolocation=()"
+    )
     response.headers["Content-Security-Policy"] = (
-    "default-src 'none'; "
-    "frame-ancestors 'none'; "
-    "base-uri 'none'; "
-    "form-action 'none'"
+        "default-src 'none'; "
+        "frame-ancestors 'none'; "
+        "base-uri 'none'; "
+        "form-action 'none'"
     )
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+
     return response
 
 from src.controllers.routes import (

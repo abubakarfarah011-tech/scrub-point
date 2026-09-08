@@ -43,16 +43,50 @@ class StaffManagementResource(Resource):
     @token_required()
     def post(self, current_admin):
         if current_admin.get("role") != "Super Admin":
-            return ApiResponse.error(message="Access denied. Super Admin privileges required.", status_code=403)
+            return ApiResponse.error(
+                message="Access denied. Super Admin privileges required.",
+                status_code=403,
+            )
 
-        json_data = request.get_json() or {}
+        json_data = request.get_json(silent=True)
+
+        if not isinstance(json_data, dict):
+            return ApiResponse.error(
+                message="Request body must be a JSON object.",
+                status_code=400,
+            )
+
         errors, cleaned_data = AdminSchema.validate_login(json_data)
+
         if errors:
-            return ApiResponse.error(message="Validation failed.", status_code=400, errors=errors)
+            return ApiResponse.error(
+                message="Validation failed.",
+                status_code=400,
+                errors=errors,
+            )
 
         role = json_data.get("role", "Admin")
-        new_staff = AuthService.register_first_admin(cleaned_data["email"], cleaned_data["password"], role)
-        return ApiResponse.success(data=new_staff, message="New administrative credentials record generated securely.", status_code=201)
+
+        if not isinstance(role, str) or role not in {
+            "Admin",
+            "Super Admin",
+        }:
+            return ApiResponse.error(
+                message="Invalid administrative role.",
+                status_code=400,
+            )
+
+        new_staff = AuthService.register_first_admin(
+            cleaned_data["email"],
+            cleaned_data["password"],
+            role,
+        )
+
+        return ApiResponse.success(
+            data=new_staff,
+            message="New administrative credentials record generated securely.",
+            status_code=201,
+        )
 
     @token_required()
     def delete(self, current_admin, admin_id=None):
@@ -85,17 +119,49 @@ class StaffStatusToggleResource(Resource):
     @token_required()
     def patch(self, current_admin, admin_id):
         if current_admin.get("role") != "Super Admin":
-            return ApiResponse.error(message="Access denied. Super Admin privileges required.", status_code=403)
+            return ApiResponse.error(
+                message="Access denied. Super Admin privileges required.",
+                status_code=403,
+            )
 
-        json_data = request.get_json() or {}
+        json_data = request.get_json(silent=True)
+
+        if not isinstance(json_data, dict):
+            return ApiResponse.error(
+                message="Request body must be a JSON object.",
+                status_code=400,
+            )
 
         if "is_active" not in json_data:
-            return ApiResponse.error(message="Missing is_active field.", status_code=400)
+            return ApiResponse.error(
+                message="Missing is_active field.",
+                status_code=400,
+            )
 
-        next_status = bool(json_data["is_active"])
+        next_status = json_data["is_active"]
+
+        if not isinstance(next_status, bool):
+            return ApiResponse.error(
+                message="is_active must be true or false.",
+                status_code=400,
+                )
 
         if str(admin_id) == str(current_admin.get("id")):
-            return ApiResponse.error(message="You cannot inactivate your own Super Admin root account profile.", status_code=400)
+            return ApiResponse.error(
+                message=(
+                    "You cannot inactivate your own "
+                    "Super Admin root account profile."
+                ),
+                status_code=400,
+            )
 
-        supabase_client.table("admins").update({"is_active": next_status}).eq("id", admin_id).execute()
-        return ApiResponse.success(message="Administrative staff active privileges flag toggled instantly.")
+        supabase_client.table("admins").update({
+            "is_active": next_status
+        }).eq(
+            "id",
+            admin_id,
+        ).execute()
+
+        return ApiResponse.success(
+            message="Administrative staff active privileges flag toggled instantly."
+        )

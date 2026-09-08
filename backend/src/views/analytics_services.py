@@ -8,10 +8,24 @@ class AnalyticsService:
     def compute_enterprise_intelligence(start_date, end_date):
 
         try:
-            datetime.strptime(start_date, "%Y-%m-%d")
-            datetime.strptime(end_date, "%Y-%m-%d")
-        except ValueError:
-            raise ValueError("Invalid date format. Use YYYY-MM-DD.")
+            parsed_start_date = datetime.strptime(
+                start_date,
+                "%Y-%m-%d",
+            )
+
+            parsed_end_date = datetime.strptime(
+                end_date,
+                "%Y-%m-%d",
+            )
+        except (ValueError, TypeError):
+            raise ValueError(
+                "Invalid date format. Use YYYY-MM-DD."
+            )
+
+        if parsed_start_date > parsed_end_date:
+            raise ValueError(
+                "Start date cannot be later than end date."
+            )
 
         orders = AnalyticsRepository.get_orders_by_date_range(
             start_date,

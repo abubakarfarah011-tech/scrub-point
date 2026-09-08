@@ -215,25 +215,71 @@ class DashboardService:
 class OrderService:
     @staticmethod
     def log_whatsapp_click(orderPayload):
-        try:
-            order_quantity = int(orderPayload.get("quantity", 1))
-        except (TypeError, ValueError):
-            order_quantity = 1
+        order_quantity = orderPayload["quantity"]
+        product_id = orderPayload.get("product_id")
+        package_id = orderPayload.get("package_id")
 
-        order_quantity = max(order_quantity, 1)
+        total_price = float(orderPayload["total_price"])
+        product_name = orderPayload["product_name"]
 
+        if product_id is not None:
+            product = ProductRepository.get_by_id(product_id)
+
+            if not product:
+                raise ValueError("Product not found.")
+
+            normal_price = float(product.get("price") or 0)
+            discount_price = float(product.get("discount_price") or 0)
+
+            is_on_offer = product.get("is_on_offer") is True or (
+                str(product.get("is_on_offer")).lower() == "true"
+            )
+
+            effective_unit_price = (
+                discount_price
+                if is_on_offer and discount_price > 0
+                else normal_price
+            )
+
+            total_price = effective_unit_price * order_quantity
+
+            # Use the authoritative database name too.
+            product_name = product.get("name") or product_name
+
+        if package_id is not None:
+            package_response = (
+                supabase_client
+                .table("packages")
+                .select("id,name,price")
+                .eq("id", package_id)
+                .limit(1)
+                .execute()
+            )
+
+            if not package_response.data:
+                raise ValueError("Package not found.")
+
+            package = package_response.data[0]
+
+            package_price = float(package.get("price") or 0)
+
+            if not math.isfinite(package_price) or package_price < 0:
+                raise ValueError("Package has an invalid price.")
+
+            total_price = package_price * order_quantity
+            product_name = package.get("name") or product_name
         return OrderRepository.create_order({
-            "product_name": orderPayload.get("product_name"),
-            "product_id": orderPayload.get("product_id"),
-            "package_id": orderPayload.get("package_id"),
+            "product_name": product_name,
+            "product_id": product_id,
+            "package_id": package_id,
             "quantity": order_quantity,
             "variant_details": orderPayload.get(
                 "variant_details",
                 "No variants selected"
-        ),
-        "total_price": float(orderPayload.get("total_price", 0.0)),
-        "order_status": "Awaiting WhatsApp"
-    })
+            ),
+            "total_price": total_price,
+            "order_status": "Awaiting WhatsApp"
+        })
 
     @staticmethod
     def fetch_orders():

@@ -3,7 +3,7 @@ import re
 import logging
 from flask import request, make_response
 from flask_restful import Resource
-from src.views.schemas import AdminSchema, ReviewSchema
+from src.views.schemas import (AdminSchema,OrderSchema,ProductSchema,ContactMessageSchema,PasswordSchema,ReviewSchema,)
 from src.views.services import ProductService, AuthService, OrderService, ReviewService, DashboardService, ContactMessageService
 from src.views.responses import ApiResponse
 from src.controllers.utilities import token_required, SecurityUtils
@@ -21,41 +21,96 @@ class ProductListResource(Resource):
         category = request.args.get("category")
         search = request.args.get("search")
         sort_by = request.args.get("sort", "newest")
+        raw_page = request.args.get("page", "1")
+        raw_limit = request.args.get("limit", "20")
+
+        if category is not None:
+            category = category.strip()
+
+            if len(category) > 100:
+                return ApiResponse.error(
+                    message="Category filter is too long.",
+                    status_code=400,
+                )
+
+        if search is not None:
+            search = search.strip()
+
+            if len(search) > 200:
+                return ApiResponse.error(
+                     message="Search query is too long.",
+                     status_code=400,
+                )
+
+        allowed_sorts = {
+            "newest",
+            "oldest",
+            "price_asc",
+            "price_desc",
+        }
+
+        if sort_by not in allowed_sorts:
+            return ApiResponse.error(
+                message="Invalid product sort option.",
+                status_code=400,
+            )
+
         try:
-            page = int(request.args.get("page", 1))
-            limit = int(request.args.get("limit", 20))
-        except (ValueError, TypeError):
-            page = 1
-            limit = 20
-        result = ProductService.fetch_all_products(category, search, page, limit, sort_by)
-        return ApiResponse.success(data=result["items"], message="Catalog fetched cleanly.")
+            page = int(raw_page)
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            return ApiResponse.error(
+                message="Page and limit must be whole numbers.",
+                status_code=400,
+            )
+
+        if page < 1:
+            return ApiResponse.error(
+                message="Page must be at least 1.",
+                status_code=400,
+            )
+
+        if limit < 1 or limit > 100:
+            return ApiResponse.error(
+                message="Limit must be between 1 and 100.",
+                status_code=400,
+            )
+
+        result = ProductService.fetch_all_products(
+            category,
+            search,
+            page,
+            limit,
+            sort_by,
+        )
+
+        return ApiResponse.success(
+            data=result["items"],
+            message="Catalog fetched cleanly.",
+            )
 
     @token_required()
     def post(self, current_admin):
-        json_data = request.get_json() or {}
+        json_data = request.get_json(silent=True)
 
-        payload = {
-            "name": str(json_data.get("name", "")).strip(),
-            "price": float(json_data.get("price", 0.0)),
-            "description": str(json_data.get("description", "")).strip(),
-            "category": str(json_data.get("category", "Scrubs")).strip(),
-            "image_url": str(json_data.get("image_url", "")).strip(),
-            "stock_quantity": int(json_data.get("stock_quantity", 10)),
-            "sizes_available": str(json_data.get("sizes_available", "")).strip(),
-            "colors_available": str(json_data.get("colors_available", "")).strip(),
-            "is_featured": bool(json_data.get("is_featured", False)),
-            "is_on_offer": bool(json_data.get("is_on_offer", False)),
-            "discount_price": float(json_data["discount_price"]) if json_data.get("discount_price") else None,
-            "is_student_package": bool(json_data.get("is_student_package", False)),
-            "package_start_date": json_data.get("package_start_date"),
-            "package_end_date": json_data.get("package_end_date"),
-            "package_start_time": json_data.get("package_start_time"),
-            "package_end_time": json_data.get("package_end_time")
-        }
+        errors, cleaned_data = ProductSchema.validate_and_clean(json_data)
+        if errors:
+            return ApiResponse.error(
+                message="Product validation failed.",
+                status_code=400,
+                errors=errors,
+            )
 
-        new_product = ProductService.add_new_product(payload, current_admin["email"])
-        return ApiResponse.success(data=new_product, message="Listing published successfully into backend cluster.", status_code=201)
+        new_product = ProductService.add_new_product(
+            cleaned_data,
+            current_admin["email"],
+        )
 
+        return ApiResponse.success(
+            data=new_product,
+            message="Listing published successfully into backend cluster.",
+            status_code=201,
+        )
 
 class ProductResource(Resource):
     def options(self, product_id=None):
@@ -69,31 +124,32 @@ class ProductResource(Resource):
 
     @token_required()
     def put(self, current_admin, product_id):
-        json_data = request.get_json() or {}
+        json_data = request.get_json(silent=True)
 
-        update_payload = {}
-        fields_list = [
-            "name", "price", "description", "category", "image_url",
-            "stock_quantity", "sizes_available", "colors_available",
-            "is_out_of_stock", "is_featured", "is_on_offer",
-            "discount_price", "is_student_package", "package_start_date",
-            "package_end_date", "package_start_time", "package_end_time"
-        ]
+        errors, update_payload = ProductSchema.validate_update(json_data)
+        if errors:
+            return ApiResponse.error(
+                message="Product validation failed.",
+                status_code=400,
+                errors=errors,
+            )
 
-        for field in fields_list:
-            if field in json_data:
-                if field == "price" or field == "discount_price":
-                    update_payload[field] = float(json_data[field]) if json_data[field] else None
-                elif field == "stock_quantity":
-                    update_payload[field] = int(json_data[field])
-                else:
-                    update_payload[field] = json_data[field]
+        updated_product = ProductService.modify_product(
+            int(product_id),
+            update_payload,
+            current_admin["email"],
+        )
 
-        updated_product = ProductService.modify_product(int(product_id), update_payload, current_admin["email"])
         if not updated_product:
-            return ApiResponse.error(message="Target portfolio metrics not found.", status_code=404)
+            return ApiResponse.error(
+                message="Target portfolio metrics not found.",
+                status_code=404,
+            )
 
-        return ApiResponse.success(data=updated_product, message="Specifications updated error-free.")
+        return ApiResponse.success(
+            data=updated_product,
+            message="Specifications updated error-free.",
+        )
 
     @token_required()
     def delete(self, current_admin, product_id):
@@ -216,11 +272,29 @@ class OrderResource(Resource):
         return make_response("", 200)
 
     def post(self):
-        json_data = request.get_json() or {}
-        if not json_data.get("product_name"):
-            return ApiResponse.error(message="Tracking context mismatch.", status_code=400)
-        logged = OrderService.log_whatsapp_click(json_data)
-        return ApiResponse.success(data=logged, message="Checkout registered.", status_code=201)
+        json_data = request.get_json(silent=True)
+
+        errors, cleaned_data = OrderSchema.validate_and_clean(json_data)
+        if errors:
+            return ApiResponse.error(
+                message="Order validation failed.",
+                status_code=400,
+                errors=errors,
+            )
+
+        try:
+            logged = OrderService.log_whatsapp_click(cleaned_data)
+        except ValueError as exc:
+            return ApiResponse.error(
+                message=str(exc),
+                status_code=400,
+            )
+
+        return ApiResponse.success(
+            data=logged,
+            message="Checkout registered.",
+            status_code=201,
+            )
 
     @token_required()
     def get(self, current_admin):
@@ -340,12 +414,22 @@ class ReviewResource(Resource):
         return ApiResponse.success(data=ReviewService.get_public_reviews(), message="Reviews synced.")
 
     def post(self):
-        json_data = request.get_json() or {}
-        errors, cleaned_data = ReviewSchema.validate_and_clean(json_data)
-        if errors:
-            return ApiResponse.error(message="Validation mismatch.", status_code=400, errors=errors)
-        return ApiResponse.success(data=ReviewService.submit_review(cleaned_data), message="Review published.", status_code=201)
+        json_data = request.get_json(silent=True)
 
+        errors, cleaned_data = ReviewSchema.validate_and_clean(json_data)
+
+        if errors:
+            return ApiResponse.error(
+                message="Validation mismatch.",
+                status_code=400,
+                errors=errors,
+            )
+
+        return ApiResponse.success(
+            data=ReviewService.submit_review(cleaned_data),
+            message="Review published.",
+            status_code=201,
+            )
 
 class AdminReviewResource(Resource):
     def options(self, review_id=None):
@@ -374,12 +458,25 @@ class ContactMessageResource(Resource):
         return make_response("", 200)
 
     def post(self):
-        json_data = request.get_json() or {}
-        if not json_data.get("name") or not json_data.get("message"):
-            return ApiResponse.error(message="Missing fields.", status_code=400)
-        logged = ContactMessageService.log_incoming_message(json_data)
-        return ApiResponse.success(data=logged, message="Message saved.", status_code=201)
+        json_data = request.get_json(silent=True)
 
+        errors, cleaned_data = ContactMessageSchema.validate_and_clean(
+            json_data
+        )
+
+        if errors:
+            return ApiResponse.error(message="Contact message validation failed.",
+                                     status_code=400,
+            errors=errors,
+           )
+
+        logged = ContactMessageService.log_incoming_message(cleaned_data)
+
+        return ApiResponse.success(
+            data=logged,
+            message="Message saved.",
+            status_code=201,
+        )
     @token_required()
     def get(self, current_admin):
         return ApiResponse.success(data=ContactMessageService.fetch_all_messages(), message="Messages loaded.")
@@ -399,11 +496,31 @@ class AdminProfileResource(Resource):
 
     @token_required()
     def put(self, current_admin):
-        json_data = request.get_json() or {}
-        new_password = json_data.get("password")
-        if not new_password or len(str(new_password)) < 6:
-            return ApiResponse.error(message="Password must be at least 6 characters long.", status_code=400)
+        json_data = request.get_json(silent=True)
+
+        errors, new_password = PasswordSchema.validate(json_data)
+
+        if errors:
+            return ApiResponse.error(
+                message="Password validation failed.",
+                status_code=400,
+                errors=errors,
+            )
+
         salt = bcrypt.gensalt(12)
-        hashed_password = bcrypt.hashpw(str(new_password).encode('utf-8'), salt).decode('utf-8')
-        supabase_client.table("admins").update({"password_hash": hashed_password}).eq("id", current_admin.get("id")).execute()
-        return ApiResponse.success(message="Security credentials rotated successfully.")
+
+        hashed_password = bcrypt.hashpw(
+            new_password.encode("utf-8"),
+            salt,
+            ).decode("utf-8")
+
+        supabase_client.table("admins").update({
+        "password_hash": hashed_password
+        }).eq(
+            "id",
+            current_admin.get("id"),
+            ).execute()
+
+        return ApiResponse.success(
+            message="Security credentials rotated successfully."
+        )

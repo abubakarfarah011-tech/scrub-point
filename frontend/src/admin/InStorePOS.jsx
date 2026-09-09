@@ -46,7 +46,7 @@ export default function InStorePOS() {
     setLoading(true);
     setErrorNotice('');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/products?limit=150&timestamp=` + new Date().getTime());
+      const res = await fetch(`${API_BASE_URL}/api/products?limit=100&timestamp=` + new Date().getTime());
       const json = await res.json();
       if (json.success) {
         setProducts(json.data || []);

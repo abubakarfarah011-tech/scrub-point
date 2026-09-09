@@ -69,7 +69,7 @@ export default function InventoryManager() {
     setLoading(true);
     setErrorNotice('');
     try {
-      const itemsResponse = await fetch(`${API_BASE_URL}/api/products?limit=200&timestamp=` + new Date().getTime());
+      const itemsResponse = await fetch(`${API_BASE_URL}/api/products?limit=100&timestamp=` + new Date().getTime());
       const itemsJson = await itemsResponse.json();
       if (itemsJson.success) {
         setProductsList(itemsJson.data || []);

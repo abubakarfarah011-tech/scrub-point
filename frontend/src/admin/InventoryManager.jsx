@@ -328,7 +328,6 @@ export default function InventoryManager() {
 
     const isCustomTailorTicked = productForm.has_custom_measurements === true || productForm.has_custom_measurements === 'true';
     const isOfferActiveTicked = productForm.is_on_offer === true || productForm.is_on_offer === 'true';
-    const offerFlagPayloadString = isOfferActiveTicked ? 'YES' : 'NO';
 
     const combinedSizingPayloadList = isCustomTailorTicked
       ? ["__CUSTOM_MEASUREMENT_ENABLED__", ...filteredSizesArray]
@@ -348,9 +347,9 @@ export default function InventoryManager() {
       category: productForm.category.trim(),
       description: productForm.description.trim(),
       stock_quantity: parseInt(productForm.stock_quantity || 0, 10),
-      colors_available: filteredColorsArray,
-      sizes_available: combinedSizingPayloadList,
-      is_on_offer: offerFlagPayloadString,
+      colors_available: filteredColorsArray.join(', '),
+      sizes_available: combinedSizingPayloadList.join(', '),
+      is_on_offer: isOfferActiveTicked,
       offer_price: productForm.offer_price ? parseFloat(productForm.offer_price) : 0.0,
       discount_price: productForm.offer_price ? parseFloat(productForm.offer_price) : 0.0,
       offer_expiry_date: productForm.offer_expiry_date || '',

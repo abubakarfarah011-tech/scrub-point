@@ -10,8 +10,12 @@ import {
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import SkeletonCard from '../components/SkeletonCard';
+import SEO from '../components/SEO';
 
 const CORPORATE_PHONE_NUMBER = "254116643999";
+const SITE_URL = (
+  import.meta.env.VITE_SITE_URL || "https://scrub-point.vercel.app"
+).replace(/\/+$/, "");
 
 const HERO_BANNER_IMAGE_URL = "https://wfdswuqpyfksxfdnqhss.supabase.co/storage/v1/object/public/site-assets/Screenshot%20from%202026-08-20%2011-32-02.png";
 
@@ -187,6 +191,37 @@ useEffect(() => {
 
   return (
     <div className="w-full flex flex-col justify-between transition-colors duration-200">
+      <SEO
+        title="Medical Scrubs & Healthcare Supplies Kenya | Scrub Point"
+        description="Shop medical scrubs, stethoscopes, clinical equipment, healthcare uniforms and medical supplies from Scrub Point Kenya."
+        path="/"
+        image={HERO_BANNER_IMAGE_URL}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": `${SITE_URL}/#organization`,
+              name: "Scrub Point",
+              url: `${SITE_URL}/`,
+              telephone: "+254116643999",
+              areaServed: {
+                "@type": "Country",
+                name: "Kenya"
+              }
+            },
+            {
+              "@type": "WebSite",
+              "@id": `${SITE_URL}/#website`,
+              url: `${SITE_URL}/`,
+              name: "Scrub Point",
+              publisher: {
+                "@id": `${SITE_URL}/#organization`
+              }
+            }
+          ]
+        }}
+      />
       <div className="grow">
 
         <section className="relative w-full min-h-[calc(100vh-72px)] overflow-hidden">

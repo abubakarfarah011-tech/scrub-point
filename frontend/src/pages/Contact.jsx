@@ -1,6 +1,7 @@
 //contact.jsx part 1
 import { useState } from 'react';
 import { Clock, MapPin, Phone, MessageCircle, Send } from 'lucide-react';
+import SEO from '../components/SEO';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function Contact() {
@@ -48,7 +49,14 @@ export default function Contact() {
   const shopPhoneNumber = "254116643999";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-20 transition-colors duration-200">
+    <>
+      <SEO
+        title="Contact Scrub Point Kenya | Medical Scrubs & Supplies"
+        description="Contact Scrub Point in Nairobi, Kenya for medical scrubs, healthcare uniforms, diagnostic supplies, bulk orders and customer support."
+        path="/contact"
+        image="https://wfdswuqpyfksxfdnqhss.supabase.co/storage/v1/object/public/site-assets/Screenshot%20from%202026-08-20%2011-32-02.png"
+      />
+<div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-20 transition-colors duration-200">
 
       {/* 🏙️ PAGE BANNER HEADER */}
       <div className="relative bg-linear-to-br from-medical-900 via-medical-900 to-[#0B192C] text-white py-16 px-4 text-center border-b border-medical-800 shadow-md overflow-hidden">
@@ -61,7 +69,7 @@ export default function Contact() {
             <MessageCircle className="h-3 w-3" />
             We're Here To Help
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight uppercase">Contact & Support</h2>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight uppercase">Contact & Support</h1>
           <p className="text-medical-100/70 mt-2 max-w-xl mx-auto text-sm sm:text-base font-medium">
             Have an inquiry about sizing or custom order bookings? Reach out across our channels live.
           </p>
@@ -172,5 +180,6 @@ export default function Contact() {
 
       </div>
     </div>
+    </>
   );
 }

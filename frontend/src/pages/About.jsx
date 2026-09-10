@@ -1,12 +1,20 @@
 import { useCart } from '../context/useCart';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Award, HeartHandshake, BookOpen, Sparkles, ArrowRight } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export default function About() {
   const { darkMode } = useCart();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-20 transition-colors duration-200">
+    <>
+      <SEO
+        title="About Scrub Point | Medical Supplies & Scrubs Kenya"
+        description="Learn about Scrub Point, a Kenya-based supplier of medical scrubs, clinical uniforms, diagnostic supplies and healthcare equipment."
+        path="/about"
+        image="https://wfdswuqpyfksxfdnqhss.supabase.co/storage/v1/object/public/site-assets/Screenshot%20from%202026-08-20%2011-32-02.png"
+      />
+<div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-20 transition-colors duration-200">
       <div className="relative bg-linear-to-br from-medical-900 via-medical-900 to-[#0B192C] text-white py-20 px-4 text-center border-b border-medical-800 shadow-md overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
           backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
@@ -17,7 +25,7 @@ export default function About() {
             <Sparkles className="h-3 w-3" />
             Empowering Health Practitioners
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight uppercase leading-tight">Our Corporate Heritage</h2>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight uppercase leading-tight">Our Corporate Heritage</h1>
           <p className="text-medical-100/70 max-w-xl mx-auto text-xs sm:text-sm font-medium leading-relaxed uppercase tracking-wide">
             Dressing the medical vanguard with premium utility uniforms, specialized diagnostics apparel, and clinical textbooks.
           </p>
@@ -146,5 +154,6 @@ export default function About() {
 
       </div>
     </div>
+    </>
   );
 }

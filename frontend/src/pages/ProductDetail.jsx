@@ -9,6 +9,11 @@ import {
   Star, ArrowRight, Package, ShoppingCart, ClipboardList
 } from 'lucide-react';
 import ReviewSection from '../components/ReviewSection';
+import SEO from '../components/SEO';
+
+const SITE_URL = (
+  import.meta.env.VITE_SITE_URL || "https://scrub-point.vercel.app"
+).replace(/\/+$/, "");
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -301,6 +306,75 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 transition-colors duration-200">
+      <SEO
+        title={`${product.name} | Scrub Point Kenya`}
+        description={
+          product.description
+            ? String(product.description).slice(0, 160)
+            : `Shop ${product.name} from Scrub Point Kenya. Medical apparel, clinical equipment and healthcare supplies.`
+        }
+        path={`/products/${product.id}`}
+        image={product.image_url || '/favicon.svg?v=2'}
+        type="product"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Product",
+              "@id": `${SITE_URL}/products/${product.id}#product`,
+              name: product.name,
+              description: product.description || product.name,
+              image: product.image_url ? [product.image_url] : undefined,
+              offers: {
+                "@type": "Offer",
+                url: `${SITE_URL}/products/${product.id}`,
+                priceCurrency: "KES",
+                price: Number(
+                  (
+                    product.is_on_offer === true ||
+                    String(product.is_on_offer).toLowerCase() === "true" ||
+                    String(product.is_on_offer).toUpperCase() === "YES"
+                  ) &&
+                  Number(product.discount_price || product.offer_price) > 0
+                    ? product.discount_price || product.offer_price
+                    : product.price
+                ),
+                availability:
+                  Number(product.stock_quantity) > 0
+                    ? "https://schema.org/InStock"
+                    : "https://schema.org/OutOfStock",
+                seller: {
+                  "@type": "Organization",
+                  name: "Scrub Point"
+                }
+              }
+            },
+            {
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "Home",
+                  item: `${SITE_URL}/`
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "Products",
+                  item: `${SITE_URL}/products`
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: product.name,
+                  item: `${SITE_URL}/products/${product.id}`
+                }
+              ]
+            }
+          ]
+        }}
+      />
 
       <div className="bg-white dark:bg-[#1E3A8A]/10 border-b border-slate-200 dark:border-slate-800 select-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-10 flex items-center space-x-2 text-[10px] font-black uppercase tracking-wider text-slate-400">

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import SkeletonCard from '../components/SkeletonCard';
+import SEO from '../components/SEO';
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -67,7 +68,14 @@ export default function Products() {
   const standardRegularProducts = products.filter(p => !p.is_on_offer && !p.is_student_package);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 antialiased font-sans pb-32 transition-colors duration-200">
+    <>
+      <SEO
+        title="Medical Scrubs, Uniforms & Equipment Kenya | Scrub Point"
+        description="Browse medical scrubs, healthcare uniforms, diagnostic equipment and clinical supply packages available from Scrub Point Kenya."
+        path="/products"
+        image="https://wfdswuqpyfksxfdnqhss.supabase.co/storage/v1/object/public/site-assets/Screenshot%20from%202026-08-20%2011-32-02.png"
+      />
+<div className="min-h-screen bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 antialiased font-sans pb-32 transition-colors duration-200">
 
       <section className="relative overflow-hidden bg-[#1E3A8A] text-white py-14 px-4 sm:px-6 lg:px-8 border-b border-[#1D4ED8] shadow-lg">
         <div className="absolute inset-0 bg-white/5 pointer-events-none" />
@@ -243,5 +251,6 @@ export default function Products() {
         </div>
       </div>
     </div>
+    </>
   );
 }

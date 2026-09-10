@@ -64,6 +64,34 @@ def apply_security_headers(response):
 
     return response
 
+
+@app.errorhandler(404)
+def handle_not_found(error):
+    return make_response({
+        "success": False,
+        "message": "API endpoint not found.",
+        "errors": []
+    }, 404)
+
+
+@app.errorhandler(405)
+def handle_method_not_allowed(error):
+    return make_response({
+        "success": False,
+        "message": "Method not allowed.",
+        "errors": []
+    }, 405)
+
+
+@app.errorhandler(500)
+def handle_internal_server_error(error):
+    return make_response({
+        "success": False,
+        "message": "Internal server error.",
+        "errors": []
+    }, 500)
+
+
 from src.controllers.routes import (
     ProductListResource,
     ProductResource,

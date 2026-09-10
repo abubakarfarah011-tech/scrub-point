@@ -199,6 +199,7 @@ messageString +=
           <div className="hidden md:flex items-center space-x-6 text-[10px] font-black uppercase tracking-widest text-slate-200">
             <Link to="/" className={`hover:text-white transition-colors cursor-pointer ${isActive('/') ? 'text-white border-b-2 border-white pb-1' : ''}`}>Home Center</Link>
             <Link to="/products" className={`hover:text-white transition-colors cursor-pointer ${isActive('/products') ? 'text-white border-b-2 border-white pb-1' : ''}`}>Products Catalog</Link>
+            <Link to="/resources" className="hover:text-white transition-colors cursor-pointer">Resources</Link>
             <Link to="/about" className={`hover:text-white transition-colors cursor-pointer ${isActive('/about') ? 'text-white border-b-2 border-white pb-1' : ''}`}>About Us</Link>
             <Link to="/contact" className={`hover:text-white transition-colors cursor-pointer ${isActive('/contact') ? 'text-white border-b-2 border-white pb-1' : ''}`}>Contact & Support</Link>
           </div>
@@ -312,6 +313,7 @@ messageString +=
         <div className="md:hidden bg-[#1E3A8A] border-t border-[#1D4ED8] py-4 px-5 flex flex-col space-y-3 text-[10px] font-black uppercase tracking-widest text-slate-300 animate-fade">
           <Link to="/" onClick={() => setMobileMenuOpen(false)} className={`py-1 ${isActive('/') ? 'text-white' : ''}`}>Home Center</Link>
           <Link to="/products" onClick={() => setMobileMenuOpen(false)} className={`py-1 ${isActive('/products') ? 'text-white' : ''}`}>Products Catalog</Link>
+          <Link to="/resources" onClick={() => setMobileMenuOpen(false)} className="py-1">Resources</Link>
           <Link to="/about" onClick={() => setMobileMenuOpen(false)} className={`py-1 ${isActive('/about') ? 'text-white' : ''}`}>About Us</Link>
           <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className={`py-1 ${isActive('/contact') ? 'text-white' : ''}`}>Contact & Support</Link>
         </div>

@@ -24,7 +24,7 @@ export default function SEO({
   path = '/',
   image = '/favicon.svg?v=2',
   type = 'website',
-  robots = 'index, follow',
+  robots = 'index, follow, max-image-preview:large',
   structuredData = null,
 }) {
   useEffect(() => {

@@ -13,6 +13,8 @@ const Products = lazy(() => import('./pages/Products'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
+const Resources = lazy(() => import('./pages/Resources'));
+const GuideDetail = lazy(() => import('./pages/GuideDetail'));
 
 const AdminLogin = lazy(() => import('./admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('./admin/AdminDashboard'));
@@ -209,6 +211,17 @@ export default function App() {
             />
           }
           />
+
+          <Route
+            path="/resources"
+            element={<Resources />}
+          />
+
+          <Route
+            path="/resources/:slug"
+            element={<GuideDetail />}
+          />
+
           </Route>
 
           <Route

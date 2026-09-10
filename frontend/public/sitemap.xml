@@ -20,4 +20,9 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url><loc>https://scrub-point.vercel.app/resources</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://scrub-point.vercel.app/resources/medical-scrub-sizing-guide-kenya</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://scrub-point.vercel.app/resources/choosing-medical-scrubs-long-clinical-shifts</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://scrub-point.vercel.app/resources/stethoscope-guide-medical-nursing-students-kenya</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://scrub-point.vercel.app/resources/how-to-wash-care-for-medical-scrubs</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>

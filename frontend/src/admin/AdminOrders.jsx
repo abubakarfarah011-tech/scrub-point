@@ -152,7 +152,7 @@ export default function AdminOrders() {
         <div className="p-6 border-b border-white/10 flex items-center space-x-2">
           <ShieldCheck className="h-6 w-6 text-medical-100" />
           <div>
-            <h1 className="font-black text-lg tracking-tight uppercase">Scrub Point</h1>
+            <h1 className="font-black text-lg tracking-tight uppercase">Scrubs Point</h1>
             <p className="text-[10px] text-medical-100 tracking-wider font-bold uppercase">Control Core</p>
           </div>
         </div>

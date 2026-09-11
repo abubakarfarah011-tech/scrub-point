@@ -142,7 +142,7 @@ export default function Navbar() {
       const corporatePhoneNumber = "254116643999";
 
       let messageString =
-  `*NEW ORDER - SCRUB POINT KENYA*\n\n` +
+  `*NEW ORDER - SCRUBS POINT KENYA*\n\n` +
   `*Order Refs:* ${collectedOrderRefs.join(', ') || 'N/A'}\n` +
   `*Items Ordered:* ${cart.length}\n\n`;
 
@@ -192,7 +192,7 @@ messageString +=
           <Link to="/" className="flex items-center space-x-2 shrink-0 cursor-pointer focus:outline-none">
             <ShieldCheck className="h-5 w-5 text-white animate-pulse" />
             <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
-              Scrub Point
+              Scrubs Point
             </span>
           </Link>
 
@@ -219,7 +219,7 @@ messageString +=
               type="button"
               onClick={() => setCartPanelOpen(!cartPanelOpen)}
               className="relative p-2.5 text-slate-200 hover:text-white transition-colors cursor-pointer focus:outline-none hover:bg-white/10 rounded-xl"
-              title="Toggle Checkout Scrub Point Trolley Drawer"
+              title="Toggle Checkout Scrubs Point Trolley Drawer"
             >
               <ShoppingCart className="h-4.5 w-4.5" />
               {computedTotalItemsSum > 0 && (
@@ -242,7 +242,7 @@ messageString +=
           <div className="flex justify-between items-center pb-2 border-b dark:border-slate-800 mb-3">
             <h4 className="font-black uppercase text-[10px] tracking-wider text-slate-500 flex items-center">
               <ShoppingCart className="h-3.5 w-3.5 mr-1 text-[#1E3A8A] dark:text-sky-400" />
-              <span>Scrub Point Trolley Cart</span>
+              <span>Scrubs Point Trolley Cart</span>
             </h4>
             <button onClick={() => setCartPanelOpen(false)} className="text-slate-400 hover:text-red-500 cursor-pointer"><X className="h-4 w-4" /></button>
           </div>

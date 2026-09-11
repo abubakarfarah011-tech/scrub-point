@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-2 flex flex-col sm:flex-row items-start sm:items-center justify-start gap-4">
 
         <div className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest shrink-0">
-        📱 Connect With Scrub Point Live On:
+        📱 Connect With Scrubs Point Live On:
         </div>
         <div className="flex flex-row items-center gap-2.5">
           <a

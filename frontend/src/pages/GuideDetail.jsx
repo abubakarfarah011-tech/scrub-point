@@ -22,7 +22,7 @@ export default function GuideDetail() {
   return (
     <article className="min-h-screen bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 pb-20">
       <SEO
-        title={`${guide.title} | Scrub Point`}
+        title={`${guide.title} | Scrubs Point`}
         description={guide.description}
         path={`/resources/${guide.slug}`}
         type="article"
@@ -38,11 +38,11 @@ export default function GuideDetail() {
               mainEntityOfPage: articleUrl,
               author: {
                 "@type": "Organization",
-                name: "Scrub Point"
+                name: "Scrubs Point"
               },
               publisher: {
                 "@type": "Organization",
-                name: "Scrub Point",
+                name: "Scrubs Point",
                 url: `${SITE_URL}/`
               }
             },
@@ -122,7 +122,7 @@ export default function GuideDetail() {
             to="/products"
             className="inline-flex items-center justify-center bg-[#1E3A8A] text-white rounded-xl px-6 py-3 text-xs font-black uppercase tracking-wider"
           >
-            Browse Scrub Point Products
+            Browse Scrubs Point Products
           </Link>
         </div>
       </div>

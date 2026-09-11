@@ -9,8 +9,8 @@ export default function About() {
   return (
     <>
       <SEO
-        title="About Scrub Point | Medical Supplies & Scrubs Kenya"
-        description="Learn about Scrub Point, a Kenya-based supplier of medical scrubs, clinical uniforms, diagnostic supplies and healthcare equipment."
+        title="About Scrubs Point | Medical Supplies & Scrubs Kenya"
+        description="Learn about Scrubs Point, a Kenya-based supplier of medical scrubs, clinical uniforms, diagnostic supplies and healthcare equipment."
         path="/about"
         image="https://wfdswuqpyfksxfdnqhss.supabase.co/storage/v1/object/public/site-assets/Screenshot%20from%202026-08-20%2011-32-02.png"
       />
@@ -54,7 +54,7 @@ export default function About() {
           </div>
 
           <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-            Founded within the bustling medical nodes of Nairobi, Kenya, Scrub Point emerged to bridge a critical supply gap in the regional healthcare market. For years, medical practitioners,dentists,consultants,pharmacists,clinicians, and clinical students were restricted to rigid, unyielding uniforms that failed to offer adequate flexibility or breathability during grueling 24-hour shifts.
+            Founded within the bustling medical nodes of Nairobi, Kenya, Scrubs Point emerged to bridge a critical supply gap in the regional healthcare market. For years, medical practitioners,dentists,consultants,pharmacists,clinicians, and clinical students were restricted to rigid, unyielding uniforms that failed to offer adequate flexibility or breathability during grueling 24-hour shifts.
           </p>
 
           <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
@@ -72,7 +72,7 @@ export default function About() {
             </h3>
           </div>
           <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-            As we matured, Scrub Point evolved beyond textiles to become a comprehensive multi-category supply hub for practitioners across East Africa. Today, our inventory encompasses three pillars:
+            As we matured, Scrubs Point evolved beyond textiles to become a comprehensive multi-category supply hub for practitioners across East Africa. Today, our inventory encompasses three pillars:
           </p>
           <ul className="space-y-3">
             <li className="flex items-start space-x-3 bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
@@ -139,7 +139,7 @@ export default function About() {
             <span className="text-xs font-black uppercase tracking-widest">Our Operational Promise</span>
           </div>
           <p className="relative z-10 text-slate-200/90 text-xs sm:text-sm font-semibold max-w-2xl mx-auto leading-relaxed">
-            Whether you are a solo medical officer ordering a customized scrubs set, a lab student picking up reference books, or an administrator outfitting an entire diagnostic wing, Scrub Point delivers premium utility. No filler, no complexity—just high-grade equipment prepared for immediate operational service.
+            Whether you are a solo medical officer ordering a customized scrubs set, a lab student picking up reference books, or an administrator outfitting an entire diagnostic wing, Scrubs Point delivers premium utility. No filler, no complexity—just high-grade equipment prepared for immediate operational service.
           </p>
           <div className="relative z-10 pt-2">
             <Link

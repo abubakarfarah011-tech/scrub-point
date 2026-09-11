@@ -145,7 +145,7 @@ api.add_resource(WalkInOrderResource, '/api/admin/walk-in-order')
 
 @app.route('/health', methods=['GET'])
 def server_health():
-    response = make_response({"status": "ok", "message": "Scrub Point Core Engine Online"}, 200)
+    response = make_response({"status": "ok", "message": "Scrubs Point Core Engine Online"}, 200)
     return response
 
 if __name__ == "__main__":

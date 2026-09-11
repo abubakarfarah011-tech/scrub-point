@@ -51,8 +51,8 @@ export default function Contact() {
   return (
     <>
       <SEO
-        title="Contact Scrub Point Kenya | Medical Scrubs & Supplies"
-        description="Contact Scrub Point in Nairobi, Kenya for medical scrubs, healthcare uniforms, diagnostic supplies, bulk orders and customer support."
+        title="Contact Scrubs Point Kenya | Medical Scrubs & Supplies"
+        description="Contact Scrubs Point in Nairobi, Kenya for medical scrubs, healthcare uniforms, diagnostic supplies, bulk orders and customer support."
         path="/contact"
         image="https://wfdswuqpyfksxfdnqhss.supabase.co/storage/v1/object/public/site-assets/Screenshot%20from%202026-08-20%2011-32-02.png"
       />

@@ -54,7 +54,7 @@ export default function SEO({
     ensureMeta('property', 'og:description', description);
     ensureMeta('property', 'og:type', type);
     ensureMeta('property', 'og:url', canonicalUrl);
-    ensureMeta('property', 'og:site_name', 'Scrub Point');
+    ensureMeta('property', 'og:site_name', 'Scrubs Point');
     ensureMeta('property', 'og:image', absoluteImage);
 
     ensureMeta('name', 'twitter:card', 'summary_large_image');

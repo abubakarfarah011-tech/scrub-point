@@ -110,7 +110,7 @@ export default function CartDrawer({ isOpen, onClose }) {
       const myRealPhoneNumber = "254116643999";
 
       let messageString =
-  `*NEW ORDER - SCRUB POINT KENYA*\n\n` +
+  `*NEW ORDER - SCRUBS POINT KENYA*\n\n` +
   `*Order Refs:* ${collectedOrderRefs.join(', ') || 'N/A'}\n` +
   `*Items Ordered:* ${cart.length}\n\n`;
 

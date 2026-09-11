@@ -11,15 +11,15 @@ export default function Resources() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 pb-20">
       <SEO
-        title="Medical Scrub & Clinical Gear Guides Kenya | Scrub Point"
-        description="Practical guides from Scrub Point Kenya covering medical scrub sizing, clinical workwear care and choosing healthcare equipment."
+        title="Medical Scrub & Clinical Gear Guides Kenya | Scrubs Point"
+        description="Practical guides from Scrubs Point Kenya covering medical scrub sizing, clinical workwear care and choosing healthcare equipment."
         path="/resources"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          name: "Scrub Point Resources",
+          name: "Scrubs Point Resources",
           url: `${SITE_URL}/resources`,
-          description: "Practical medical workwear and clinical equipment guides from Scrub Point Kenya."
+          description: "Practical medical workwear and clinical equipment guides from Scrubs Point Kenya."
         }}
       />
 
@@ -27,7 +27,7 @@ export default function Resources() {
         <div className="max-w-3xl mx-auto space-y-4">
           <BookOpen className="h-8 w-8 mx-auto" />
           <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight">
-            Scrub Point Resources
+            Scrubs Point Resources
           </h1>
           <p className="text-sm text-white/80 max-w-2xl mx-auto">
             Practical buying, sizing and care guidance for healthcare professionals and students.

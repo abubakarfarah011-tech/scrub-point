@@ -24,7 +24,7 @@ export default function ProductCard({ item }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-xs uppercase tracking-widest bg-slate-200">
-            Scrub Point Photo
+            Scrubs Point Photo
           </div>
         )}
           {isOutOfStock && (

@@ -33,7 +33,7 @@ function isPackageExpired(pkg) {
 }
 function buildPackageWhatsAppUrl(pkg, orderRef) {
   const message = encodeURIComponent(
-    `*NEW PACKAGE ORDER - SCRUB POINT KENYA*\n\n` +
+    `*NEW PACKAGE ORDER - SCRUBS POINT KENYA*\n\n` +
     `*Order Ref:* ${orderRef || 'N/A'}\n` +
     `*Package:* ${pkg.name}\n` +
     `*Quantity:* 1\n` +
@@ -192,8 +192,8 @@ useEffect(() => {
   return (
     <div className="w-full flex flex-col justify-between transition-colors duration-200">
       <SEO
-        title="Medical Scrubs & Healthcare Supplies Kenya | Scrub Point"
-        description="Shop medical scrubs, stethoscopes, clinical equipment, healthcare uniforms and medical supplies from Scrub Point Kenya."
+        title="Medical Scrubs & Healthcare Supplies Kenya | Scrubs Point"
+        description="Shop medical scrubs, stethoscopes, clinical equipment, healthcare uniforms and medical supplies from Scrubs Point Kenya."
         path="/"
         image={HERO_BANNER_IMAGE_URL}
         structuredData={{
@@ -202,7 +202,7 @@ useEffect(() => {
             {
               "@type": "Organization",
               "@id": `${SITE_URL}/#organization`,
-              name: "Scrub Point",
+              name: "Scrubs Point",
               url: `${SITE_URL}/`,
               telephone: "+254116643999",
               areaServed: {
@@ -214,7 +214,7 @@ useEffect(() => {
               "@type": "WebSite",
               "@id": `${SITE_URL}/#website`,
               url: `${SITE_URL}/`,
-              name: "Scrub Point",
+              name: "Scrubs Point",
               publisher: {
                 "@id": `${SITE_URL}/#organization`
               }
@@ -228,7 +228,7 @@ useEffect(() => {
 
           <img
           src={HERO_BANNER_IMAGE_URL}
-          alt="Scrub Point — medical scrubs, stethoscopes, textbooks, and mobility equipment"
+          alt="Scrubs Point — medical scrubs, stethoscopes, textbooks, and mobility equipment"
           loading="eager"
           decoding="async"
           fetchPriority="high"
@@ -434,7 +434,7 @@ useEffect(() => {
 
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 space-y-6">
           <div className="text-center space-y-0.5">
-            <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Why Choose Scrub Point?</h2>
+            <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Why Choose Scrubs Point?</h2>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Engineered to support medical professionals with absolute zero e-commerce friction</p>
           </div>
 

@@ -70,8 +70,8 @@ export default function Products() {
   return (
     <>
       <SEO
-        title="Medical Scrubs, Uniforms & Equipment Kenya | Scrub Point"
-        description="Browse medical scrubs, healthcare uniforms, diagnostic equipment and clinical supply packages available from Scrub Point Kenya."
+        title="Medical Scrubs, Uniforms & Equipment Kenya | Scrubs Point"
+        description="Browse medical scrubs, healthcare uniforms, diagnostic equipment and clinical supply packages available from Scrubs Point Kenya."
         path="/products"
         image="https://wfdswuqpyfksxfdnqhss.supabase.co/storage/v1/object/public/site-assets/Screenshot%20from%202026-08-20%2011-32-02.png"
       />
@@ -85,7 +85,7 @@ export default function Products() {
             <div className="flex items-center space-x-2">
               <Sparkles className="h-4 w-4 text-slate-200 animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-200">
-                Scrub Point Products Catalog
+                Scrubs Point Products Catalog
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white leading-none">

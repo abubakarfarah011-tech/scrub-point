@@ -47,7 +47,7 @@ export default function AdminLogin() {
           <div className="p-3 bg-white/10 rounded-full mb-2">
             <ShieldCheck className="h-8 w-8 text-medical-100" />
           </div>
-          <h2 className="text-2xl font-bold tracking-wide">SCRUB POINT ADMIN</h2>
+          <h2 className="text-2xl font-bold tracking-wide">SCRUBS POINT ADMIN</h2>
           <p className="text-xs text-medical-100 mt-1 uppercase tracking-widest font-semibold">
             Secure Management Access Gateway
           </p>

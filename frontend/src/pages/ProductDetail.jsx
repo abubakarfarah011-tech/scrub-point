@@ -79,7 +79,7 @@ export default function ProductDetail() {
           setError('We could not find this product in our store inventory right now.');
         }
       } catch (err) {
-        setError('Network error. Failed to connect to the Scrub Point database.');
+        setError('Network error. Failed to connect to the Scrubs Point database.');
       } finally {
         setLoading(false);
       }
@@ -154,7 +154,7 @@ useEffect(() => {
     const totalOrderPrice = displayPrice * purchaseQuantity;
 
     const compiledWhatsAppMessageString = encodeURIComponent(
-  `*NEW ORDER - SCRUB POINT KENYA*\n\n` +
+  `*NEW ORDER - SCRUBS POINT KENYA*\n\n` +
   `*Order Ref:* ${orderRef || 'N/A'}\n` +
   `*Product:* ${product.name}\n` +
   `${sizingDetailsTextLine}\n` +
@@ -307,11 +307,11 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 transition-colors duration-200">
       <SEO
-        title={`${product.name} | Scrub Point Kenya`}
+        title={`${product.name} | Scrubs Point Kenya`}
         description={
           product.description
             ? String(product.description).slice(0, 160)
-            : `Shop ${product.name} from Scrub Point Kenya. Medical apparel, clinical equipment and healthcare supplies.`
+            : `Shop ${product.name} from Scrubs Point Kenya. Medical apparel, clinical equipment and healthcare supplies.`
         }
         path={`/products/${product.id}`}
         image={product.image_url || '/favicon.svg?v=2'}
@@ -345,7 +345,7 @@ useEffect(() => {
                     : "https://schema.org/OutOfStock",
                 seller: {
                   "@type": "Organization",
-                  name: "Scrub Point"
+                  name: "Scrubs Point"
                 }
               }
             },

@@ -43,7 +43,7 @@ function PublicLayoutFrame({ isDarkMode, onThemeToggle }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-[#1D4ED8]">
 
           <div className="space-y-3">
-            <h3 className="font-black text-white text-xs tracking-wider uppercase">Scrub Point Kenya</h3>
+            <h3 className="font-black text-white text-xs tracking-wider uppercase">Scrubs Point Kenya</h3>
             <p className="leading-relaxed max-w-sm uppercase text-[10px] font-bold text-slate-300">
               East Africa's most dedicated marketplace outfitting medical fields with high-weave textile scrubs, diagnostics gear, and medical reference books.
             </p>
@@ -71,7 +71,7 @@ function PublicLayoutFrame({ isDarkMode, onThemeToggle }) {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-[9px] font-bold uppercase tracking-wider text-slate-300">
-          <p>© {new Date().getFullYear()} Scrub Point Kenya. All Corporate Rights Reserved.</p>
+          <p>© {new Date().getFullYear()} Scrubs Point Kenya. All Corporate Rights Reserved.</p>
           <div className="flex space-x-4">
             <span className="hover:text-white cursor-pointer">Terms of Service</span>
             <span>•</span>
@@ -152,7 +152,7 @@ export default function App() {
             <div className="text-center space-y-3">
               <div className="h-8 w-8 mx-auto rounded-full border-4 border-slate-200 border-t-[#1E3A8A] animate-spin" />
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                Loading Scrub Point...
+                Loading Scrubs Point...
                 </p>
                 </div>
                 </div>

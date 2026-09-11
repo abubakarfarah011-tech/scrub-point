@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const DEFAULT_SITE_URL = 'https://scrub-point.vercel.app';
+const DEFAULT_SITE_URL = 'https://scrubspoint.com';
 
 function ensureMeta(attribute, key, content) {
   if (!content) return;

@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/
 
-Sitemap: https://scrub-point.vercel.app/sitemap.xml
+Sitemap: https://scrubspoint.com/sitemap.xml

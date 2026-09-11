@@ -4,7 +4,7 @@ import SEO from '../components/SEO';
 import { getGuideBySlug } from '../data/guides';
 
 const SITE_URL = (
-  import.meta.env.VITE_SITE_URL || "https://scrub-point.vercel.app"
+  import.meta.env.VITE_SITE_URL || "https://scrubspoint.com"
 ).replace(/\/+$/, "");
 
 const PUBLISHED_DATE = "2026-09-10";

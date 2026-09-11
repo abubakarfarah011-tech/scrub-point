@@ -12,7 +12,7 @@ import ReviewSection from '../components/ReviewSection';
 import SEO from '../components/SEO';
 
 const SITE_URL = (
-  import.meta.env.VITE_SITE_URL || "https://scrub-point.vercel.app"
+  import.meta.env.VITE_SITE_URL || "https://scrubspoint.com"
 ).replace(/\/+$/, "");
 
 export default function ProductDetail() {

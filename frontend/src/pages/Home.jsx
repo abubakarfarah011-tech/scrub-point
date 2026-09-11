@@ -14,7 +14,7 @@ import SEO from '../components/SEO';
 
 const CORPORATE_PHONE_NUMBER = "254116643999";
 const SITE_URL = (
-  import.meta.env.VITE_SITE_URL || "https://scrub-point.vercel.app"
+  import.meta.env.VITE_SITE_URL || "https://scrubspoint.com"
 ).replace(/\/+$/, "");
 
 const HERO_BANNER_IMAGE_URL = "https://wfdswuqpyfksxfdnqhss.supabase.co/storage/v1/object/public/site-assets/Screenshot%20from%202026-08-20%2011-32-02.png";

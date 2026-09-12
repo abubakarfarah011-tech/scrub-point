@@ -325,7 +325,7 @@ useEffect(() => {
                   </div>
                   ) : (
                   <div className="animate-marquee-track px-4">
-                    {featuredListings.concat(featuredListings).map((item, idx) => (
+                    {featuredListings.map((item, idx) => (
                       <div
                       key={`marquee-item-${idx}`}
                       className="w-50 shrink-0 transform hover:scale-102 transition-transform shadow-xs bg-white dark:bg-slate-900 rounded-2xl p-2 border dark:border-slate-800"
@@ -481,7 +481,7 @@ useEffect(() => {
             `}</style>
 
             <div className="animate-marquee-track-reverse px-4">
-              {bestSellersListings.concat(bestSellersListings).map((item, idx) => (
+              {bestSellersListings.map((item, idx) => (
                 <div key={`b-marquee-item-${idx}`} className="w-50 shrink-0 transform hover:scale-102 transition-transform shadow-xs bg-white dark:bg-slate-900 rounded-2xl p-2 border dark:border-slate-800">
                   <ProductCard item={item} />
                 </div>

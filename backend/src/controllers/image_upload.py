@@ -90,7 +90,7 @@ class AdminImageUploadResource(Resource):
                 }, 400
 
 
-            max_file_size = 5 * 1024 * 1024
+            max_file_size = 10 * 1024 * 1024
 
             uploaded_file.seek(0, os.SEEK_END)
             file_size_bytes = uploaded_file.tell()
@@ -106,7 +106,7 @@ class AdminImageUploadResource(Resource):
                 return {
                     "success": False,
                     "message": (
-                        "File size exceeds the 5 MB safety limit."
+                        "File size exceeds the 10 MB safety limit."
                     )
                 }, 400
 

@@ -330,7 +330,7 @@ useEffect(() => {
                       key={`marquee-item-${idx}`}
                       className="w-50 shrink-0 transform hover:scale-102 transition-transform shadow-xs bg-white dark:bg-slate-900 rounded-2xl p-2 border dark:border-slate-800"
                       >
-                        <ProductCard item={item} />
+                        <ProductCard item={item} priority={idx < 4} />
                         </div>
                       ))}
                       </div>

@@ -236,7 +236,7 @@ class AdminImageUploadResource(Resource):
                     file=raw_binary_stream,
                     file_options={
                         "content-type": expected_mime_type,
-                        "cache-control": "3600"
+                        "cache-control": "31536000"
                     }
                 )
             )

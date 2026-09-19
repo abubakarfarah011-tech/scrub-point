@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 
-export default function ProductCard({ item }) {
+export default function ProductCard({ item, priority = false }) {
   const stockQuantity = Number(item.stock_quantity || 0);
   const isOutOfStock = stockQuantity <= 0;
   return (
@@ -18,7 +18,8 @@ export default function ProductCard({ item }) {
           <img
           src={item.image_url}
           alt={item.name}
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
           decoding="async"
           className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
           />
